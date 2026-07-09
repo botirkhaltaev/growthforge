@@ -198,11 +198,33 @@ export function BriefScreen({
   };
 
   const applyExample = (example: (typeof EXAMPLES)[number]) => {
-    setBriefTouched(false);
-    setData({
+    const next = {
       ...example.data,
+      composedBrief: composeBrief({
+        ...example.data,
+        composedBrief: "",
+      }),
+    };
+    setBriefTouched(false);
+    setData(next);
+    // Jump to Review so phone demos aren't stuck tapping Next × 3
+    setDirection(1);
+    setStep(3);
+  };
+
+  const runQuickDemo = () => {
+    if (loading) return;
+    const eco = EXAMPLES[0];
+    const next: WizardData = {
+      ...eco.data,
       composedBrief: "",
-    });
+    };
+    const brief = composeBrief(next);
+    setBriefTouched(false);
+    setData({ ...next, composedBrief: brief });
+    setDirection(1);
+    setStep(3);
+    onSubmit(brief);
   };
 
   const copy = STEP_COPY[step];
@@ -338,6 +360,14 @@ export function BriefScreen({
                         );
                       })}
                     </div>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={runQuickDemo}
+                      className="mx-auto flex items-center gap-1.5 rounded-full border border-pass/30 bg-pass/10 px-3.5 py-1.5 text-[11px] font-medium text-pass transition hover:bg-pass/15 disabled:opacity-45"
+                    >
+                      Quick demo · Eco bottle
+                    </button>
                   </>
                 )}
 

@@ -219,7 +219,17 @@ export function ReachoutPanel({
             </motion.button>
             <button
               type="button"
-              onClick={onReset}
+              onClick={() => {
+                if (!onReset) return;
+                if (
+                  !window.confirm(
+                    "Start a new brief? Current reach-out plan will be cleared."
+                  )
+                ) {
+                  return;
+                }
+                onReset();
+              }}
               className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.03] py-3 text-[14px] font-medium text-foreground/80 transition hover:border-amber/30 hover:text-amber-bright"
             >
               Scope another motion
