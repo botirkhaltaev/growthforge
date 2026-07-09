@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import type { AdVariant, ReachoutTouch } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -29,9 +30,11 @@ export function ReachoutPanel({
   onSend,
   onReset,
 }: ReachoutPanelProps) {
+  const [muted, setMuted] = useState(true);
+
   return (
-    <div className="relative flex min-h-dvh flex-col px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]">
-      <header className="flex items-center justify-between gap-3 pb-3">
+    <div className="relative flex h-dvh flex-col px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]">
+      <header className="flex shrink-0 items-center justify-between gap-3 pb-3">
         <button
           type="button"
           onClick={() => {
@@ -58,7 +61,7 @@ export function ReachoutPanel({
         </Link>
       </header>
 
-      <div className="px-1 pb-3">
+      <div className="shrink-0 px-1 pb-3">
         <FactoryLoop
           compact
           active={launched ? null : "reachout"}
@@ -69,7 +72,7 @@ export function ReachoutPanel({
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mx-auto flex w-full max-w-lg flex-1 flex-col space-y-4 overflow-y-auto pb-2"
+        className="mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col space-y-4 overflow-y-auto pb-2"
       >
         <div className="space-y-2 text-center">
           <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber/80">
@@ -113,14 +116,23 @@ export function ReachoutPanel({
                 </p>
               </div>
               {winner.videoUrl ? (
-                <video
-                  src={winner.videoUrl}
-                  className="h-16 w-12 shrink-0 rounded-lg object-cover ring-1 ring-white/10"
-                  muted
-                  playsInline
-                  autoPlay
-                  loop
-                />
+                <div className="relative shrink-0">
+                  <video
+                    src={winner.videoUrl}
+                    className="h-16 w-12 rounded-lg object-cover ring-1 ring-white/10"
+                    muted={muted}
+                    playsInline
+                    autoPlay
+                    loop
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMuted((m) => !m)}
+                    className="absolute inset-x-0 bottom-0 rounded-b-lg bg-black/55 py-0.5 font-mono text-[8px] text-white/85"
+                  >
+                    {muted ? "Unmute" : "Mute"}
+                  </button>
+                </div>
               ) : winner.videoStatus === "producing" ? (
                 <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-lg bg-white/[0.04] ring-1 ring-amber/25">
                   <span className="forge-ring h-4 w-4 rounded-full border-2 border-amber/25 border-t-amber" />
@@ -132,14 +144,19 @@ export function ReachoutPanel({
 
         <div className="relative space-y-0 pl-1">
           {touches.map((touch, i) => (
-            <div key={`${touch.day}-${touch.channel}-${touch.title}`} className="relative flex gap-3 pb-4">
+            <div
+              key={`${touch.day}-${touch.channel}-${touch.title}`}
+              className="relative flex gap-3 pb-4"
+            >
               <div className="flex w-8 flex-col items-center">
-                <span
+                <motion.span
+                  layout
                   className={cn(
                     "mt-1 h-2.5 w-2.5 rounded-full ring-2",
                     touch.status === "live" || launched
                       ? "bg-pass ring-pass/40"
-                      : "bg-amber ring-amber/35"
+                      : "bg-amber ring-amber/35",
+                    launched && "loop-pulse"
                   )}
                 />
                 {i < touches.length - 1 && (
@@ -183,7 +200,7 @@ export function ReachoutPanel({
         </p>
       </motion.div>
 
-      <div className="mx-auto w-full max-w-lg space-y-2 pt-3">
+      <div className="mx-auto w-full max-w-lg shrink-0 space-y-2 pt-3">
         {launched ? (
           <>
             <button

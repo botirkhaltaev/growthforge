@@ -85,8 +85,8 @@ export function TrustOverlay({
                 value={`${agentCount} specialists · parallel`}
               />
               <Row
-                label="Work distributed"
-                value={`${iterations} variants · scope→distribute`}
+                label="Variants scored"
+                value={`${iterations} · scope→distribute`}
               />
               <Row label="Gate confidence" value={`${confidence}%`} accent />
               <Row
