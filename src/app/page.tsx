@@ -1,199 +1,112 @@
-"use client";
+import Link from "next/link";
+import { LandingHero } from "@/components/LandingHero";
+import { LandingShowcase } from "@/components/LandingShowcase";
 
-import { useCallback, useRef, useState } from "react";
-import { BriefScreen } from "@/components/BriefScreen";
-import { ForgeCanvas } from "@/components/ForgeCanvas";
-import type {
-  AdVariant,
-  AgentActivity,
-  CampaignEvent,
-  ForgePhase,
-} from "@/lib/types";
+const LOOP_STEPS = [
+  { label: "Create ad", color: "text-foreground/70" },
+  { label: "A/B test", color: "text-foreground/70" },
+  { label: "CTR score", color: "text-close" },
+  { label: "Revise", color: "text-foreground/70" },
+  { label: "Pass", color: "text-pass" },
+] as const;
 
-const IDLE_ACTIVITY: AgentActivity = {
-  copywriter: false,
-  designer: false,
-  media_buyer: false,
-  analyst: false,
-  tester: false,
-};
+const AGENTS = [
+  { role: "Copywriter", task: "Headlines & hooks" },
+  { role: "Designer", task: "Visual direction" },
+  { role: "Media Buyer", task: "Platform targeting" },
+  { role: "Analyst", task: "CTR & ROAS scoring" },
+] as const;
 
-export default function Home() {
-  const [phase, setPhase] = useState<ForgePhase>("brief");
-  const [variants, setVariants] = useState<AdVariant[]>([]);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [activity, setActivity] = useState<AgentActivity>(IDLE_ACTIVITY);
-  const [statusMessage, setStatusMessage] = useState("");
-  const [confidence, setConfidence] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
-
-  const setRoleActive = (role: string, active: boolean) => {
-    setActivity((prev) => {
-      if (!(role in prev)) return prev;
-      return { ...prev, [role]: active };
-    });
-  };
-
-  const handleEvent = useCallback((event: CampaignEvent) => {
-    switch (event.type) {
-      case "system":
-      case "tester":
-      case "iteration":
-        if (event.message) setStatusMessage(event.message);
-        break;
-      case "agent_created":
-      case "vm_spawned":
-        if (event.message) setStatusMessage(event.message);
-        break;
-      case "agent_active":
-        if (event.role) setRoleActive(event.role, true);
-        break;
-      case "agent_idle":
-        if (event.role) setRoleActive(event.role, false);
-        break;
-      case "subagent_output":
-        if (event.content) setStatusMessage(event.content.slice(0, 80));
-        if (event.role) setRoleActive(event.role, true);
-        break;
-      case "variant_ready":
-        if (event.variant) {
-          setVariants((prev) => {
-            const next = [...prev.filter((v) => v.id !== event.variant!.id), event.variant!];
-            next.sort((a, b) => a.label.localeCompare(b.label));
-            return next;
-          });
-          setActiveIndex((prev) => {
-            // Prefer showing the newest variant
-            return event.variant
-              ? ["A", "B", "C"].indexOf(event.variant.label)
-              : prev;
-          });
-          if (event.message) setStatusMessage(event.message);
-        }
-        break;
-      case "complete":
-        if (event.variants) {
-          setVariants(event.variants);
-          const passIdx = event.variants.findIndex((v) => v.verdict === "pass");
-          setActiveIndex(passIdx >= 0 ? passIdx : event.variants.length - 1);
-        }
-        if (event.confidence) setConfidence(event.confidence);
-        if (event.message) setStatusMessage(event.message);
-        setActivity(IDLE_ACTIVITY);
-        setPhase("ready");
-        setLoading(false);
-        break;
-      case "error":
-        if (event.message) setStatusMessage(event.message);
-        break;
-    }
-  }, []);
-
-  const forge = async (brief: string) => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    setLoading(true);
-    setPhase("forging");
-    setVariants([]);
-    setActiveIndex(0);
-    setActivity(IDLE_ACTIVITY);
-    setConfidence(0);
-    setStatusMessage("Connecting to agents…");
-
-    try {
-      const res = await fetch("/api/campaign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brief }),
-        signal: controller.signal,
-      });
-
-      if (!res.ok || !res.body) {
-        throw new Error(`Campaign failed (${res.status})`);
-      }
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const chunks = buffer.split("\n\n");
-        buffer = chunks.pop() ?? "";
-
-        for (const chunk of chunks) {
-          const line = chunk
-            .split("\n")
-            .find((l) => l.startsWith("data: "));
-          if (!line) continue;
-          try {
-            const event = JSON.parse(line.slice(6)) as CampaignEvent;
-            handleEvent(event);
-          } catch {
-            // ignore malformed SSE
-          }
-        }
-      }
-    } catch (err) {
-      if ((err as Error).name === "AbortError") {
-        setStatusMessage("Agents halted.");
-        setPhase(variants.length ? "ready" : "brief");
-      } else {
-        setStatusMessage(
-          err instanceof Error ? err.message : "Something went wrong"
-        );
-        setPhase("brief");
-      }
-    } finally {
-      setLoading(false);
-      setActivity(IDLE_ACTIVITY);
-    }
-  };
-
-  const onKill = () => {
-    abortRef.current?.abort();
-    setActivity(IDLE_ACTIVITY);
-    setStatusMessage("Kill switch — agents halted.");
-  };
-
-  const onDeploy = () => {
-    setPhase("deployed");
-    setStatusMessage("Live on Meta · Facebook + Instagram");
-  };
-
-  const onReset = () => {
-    abortRef.current?.abort();
-    setPhase("brief");
-    setVariants([]);
-    setActiveIndex(0);
-    setActivity(IDLE_ACTIVITY);
-    setConfidence(0);
-    setStatusMessage("");
-    setLoading(false);
-  };
-
-  if (phase === "brief") {
-    return <BriefScreen onSubmit={forge} loading={loading} />;
-  }
-
+export default function LandingPage() {
   return (
-    <ForgeCanvas
-      variants={variants}
-      activeIndex={Math.min(activeIndex, Math.max(0, variants.length - 1))}
-      onIndexChange={setActiveIndex}
-      activity={activity}
-      statusMessage={statusMessage}
-      confidence={confidence || (phase === "ready" || phase === "deployed" ? 94 : 0)}
-      forging={phase === "forging"}
-      deployed={phase === "deployed"}
-      onDeploy={onDeploy}
-      onKill={onKill}
-      onReset={onReset}
-    />
+    <main>
+      <LandingHero />
+
+      <section
+        id="how-it-works"
+        className="border-y border-white/[0.06] px-5 py-20 sm:py-24"
+      >
+        <div className="mx-auto max-w-4xl space-y-10 text-center">
+          <div className="space-y-3">
+            <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber/80">
+              The loop
+            </p>
+            <h2 className="font-display text-balance text-[2rem] leading-[1.12] tracking-tight sm:text-3xl">
+              Write → test → fail → fix → pass
+            </h2>
+            <p className="mx-auto max-w-lg text-[15px] leading-relaxed text-muted">
+              Same feedback cycle that ships software — applied to growth
+              marketing. Agents don&apos;t stop at the first draft.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 font-mono text-[12px] sm:text-[13px]">
+            {LOOP_STEPS.map((step, i) => (
+              <span key={step.label} className="flex items-center gap-3">
+                <span className={step.color}>{step.label}</span>
+                {i < LOOP_STEPS.length - 1 && (
+                  <span className="text-muted/40">→</span>
+                )}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <LandingShowcase />
+
+      <section className="px-5 py-20 sm:py-24">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-12 space-y-3 text-center">
+            <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber/80">
+              The agents
+            </p>
+            <h2 className="font-display text-balance text-[2rem] leading-[1.12] tracking-tight sm:text-3xl">
+              Parallel specialists, one creative
+            </h2>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {AGENTS.map((agent) => (
+              <div
+                key={agent.role}
+                className="rounded-2xl border border-white/[0.07] bg-surface/60 px-5 py-6 text-center"
+              >
+                <p className="font-display text-lg text-amber-bright">
+                  {agent.role}
+                </p>
+                <p className="mt-2 text-[13px] text-muted">{agent.task}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 pb-24 pt-8">
+        <div className="mx-auto max-w-2xl space-y-8 text-center">
+          <div className="space-y-4">
+            <h2 className="font-display text-balance text-[2rem] leading-[1.12] tracking-tight sm:text-3xl">
+              Ready to forge?
+            </h2>
+            <p className="text-[15px] leading-relaxed text-muted">
+              Enter a product brief and watch four agents iterate until the
+              creative clears the bar.
+            </p>
+          </div>
+
+          <Link
+            href="/forge"
+            className="group relative inline-flex items-center justify-center overflow-hidden rounded-2xl bg-amber px-10 py-3.5 text-[15px] font-semibold text-[#1a1408] transition hover:bg-amber-bright"
+          >
+            <span className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-60" />
+            <span className="relative">Forge a campaign</span>
+          </Link>
+
+          <p className="font-mono text-[11px] tracking-wide text-muted/50">
+            Built with @cursor/sdk · parallel agents · generative UI
+          </p>
+        </div>
+      </section>
+    </main>
   );
 }
