@@ -70,6 +70,11 @@ export function ForgeCanvas({
     if (activeIndex < variants.length - 1) onIndexChange(activeIndex + 1);
   };
 
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowLeft") goPrev();
+    if (e.key === "ArrowRight") goNext();
+  };
+
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
     startHold();
@@ -135,7 +140,9 @@ export function ForgeCanvas({
 
       {/* Canvas */}
       <div
-        className="relative flex flex-1 flex-col justify-center px-4 py-3 select-none"
+        className="relative flex min-h-0 flex-1 flex-col justify-center px-4 py-2 select-none outline-none"
+        tabIndex={0}
+        onKeyDown={onKeyDown}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
         onTouchCancel={clearHold}
@@ -198,31 +205,17 @@ export function ForgeCanvas({
           ) : null}
         </AnimatePresence>
 
-        {/* Live status under creative */}
-        <p className="mt-4 min-h-[1.25rem] text-center font-mono text-[11px] text-muted/80">
-          {statusMessage || (anyActive ? "Agents working…" : "")}
-        </p>
-
-        {variants.length > 1 && !forging && (
-          <div className="mt-2 hidden justify-center gap-8 sm:flex">
-            <button
-              type="button"
-              onClick={goPrev}
-              disabled={activeIndex === 0}
-              className="text-xs text-muted disabled:opacity-25"
-            >
-              ← Prev
-            </button>
-            <button
-              type="button"
-              onClick={goNext}
-              disabled={activeIndex === variants.length - 1}
-              className="text-xs text-muted disabled:opacity-25"
-            >
-              Next →
-            </button>
-          </div>
-        )}
+        {/* Live status + iteration note */}
+        <div className="mt-3 min-h-[2.5rem] space-y-1 px-2 text-center">
+          <p className="font-mono text-[11px] text-muted/80">
+            {statusMessage || (anyActive ? "Agents working…" : "")}
+          </p>
+          {variant?.iterationNote && !forging && (
+            <p className="text-[12px] leading-snug text-foreground/55">
+              {variant.iterationNote}
+            </p>
+          )}
+        </div>
 
         <TrustOverlay
           open={trustOpen}
@@ -236,9 +229,9 @@ export function ForgeCanvas({
         />
       </div>
 
-      {/* Bottom bar */}
-      <footer className="space-y-3.5 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-1">
-        <div className="flex items-center justify-center gap-3.5">
+      {/* Bottom bar — always visible CTA */}
+      <footer className="shrink-0 space-y-2.5 border-t border-white/[0.04] bg-background/80 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md">
+        <div className="flex items-center justify-center gap-3">
           <div className="flex items-center gap-1.5">
             {variants.length > 0
               ? variants.map((v, i) => (
@@ -251,7 +244,7 @@ export function ForgeCanvas({
                       "flex h-7 min-w-7 items-center justify-center rounded-full px-2 font-mono text-[11px] font-medium transition",
                       i === activeIndex
                         ? "bg-amber text-[#1a1408]"
-                        : "bg-white/[0.06] text-muted"
+                        : "bg-white/[0.06] text-muted hover:bg-white/10"
                     )}
                   >
                     {v.label}
@@ -305,12 +298,10 @@ export function ForgeCanvas({
               ? "Agents iterating…"
               : variant?.verdict === "pass"
                 ? "Approve & Deploy"
-                : "Waiting for a passing variant…"}
+                : variant
+                  ? `Variant ${variant.label} needs more work`
+                  : "Waiting for a passing variant…"}
         </button>
-
-        <p className="text-center text-[10px] text-muted/50">
-          Swipe to compare · Trust for oversight
-        </p>
       </footer>
     </div>
   );
