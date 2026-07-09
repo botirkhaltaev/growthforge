@@ -3,17 +3,17 @@ import { LandingHero } from "@/components/LandingHero";
 import { LandingShowcase } from "@/components/LandingShowcase";
 
 const LOOP_STEPS = [
-  { label: "Create", color: "text-foreground/70" },
-  { label: "Test", color: "text-foreground/70" },
-  { label: "Iterate", color: "text-close" },
-  { label: "Launch", color: "text-pass" },
+  { label: "Scope", color: "text-foreground/70" },
+  { label: "Distribute", color: "text-close" },
+  { label: "Reach out", color: "text-pass" },
 ] as const;
 
 const AGENTS = [
-  { role: "Copywriter", task: "Messaging & hooks" },
+  { role: "Copywriter", task: "Hooks & messaging" },
   { role: "Designer", task: "Creative direction" },
-  { role: "Media Buyer", task: "Channel targeting" },
-  { role: "Analyst", task: "CTR & ROAS gates" },
+  { role: "Media Buyer", task: "Audience & enrichment" },
+  { role: "Analyst", task: "Gate & forecast" },
+  { role: "Producer", task: "Video ad render" },
 ] as const;
 
 export default function LandingPage() {
@@ -31,11 +31,12 @@ export default function LandingPage() {
               GTM factory
             </p>
             <h2 className="font-display text-balance text-[2rem] leading-[1.12] tracking-tight sm:text-3xl">
-              Create → test → iterate → launch
+              Scope → distribute → reach out
             </h2>
             <p className="mx-auto max-w-lg text-[15px] leading-relaxed text-muted">
-              Same stage-gate discipline as a go-to-market motion — applied to
-              creative. Agents don&apos;t stop at the first draft.
+              How a GTM person actually works — ICP and signals first, work
+              distributed across specialists, then a multi-touch cadence with
+              replies feeding back.
             </p>
           </div>
 
@@ -49,6 +50,10 @@ export default function LandingPage() {
               </span>
             ))}
           </div>
+
+          <p className="font-mono text-[10px] tracking-wide text-muted/45">
+            scope the motion · distribute the work · reach the market
+          </p>
         </div>
       </section>
 
@@ -58,14 +63,14 @@ export default function LandingPage() {
         <div className="mx-auto max-w-4xl">
           <div className="mb-12 space-y-3 text-center">
             <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber/80">
-              Factory stations
+              Work distribution
             </p>
             <h2 className="font-display text-balance text-[2rem] leading-[1.12] tracking-tight sm:text-3xl">
-              Parallel specialists, one creative
+              Tasks assigned. One creative.
             </h2>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {AGENTS.map((agent) => (
               <div
                 key={agent.role}
@@ -81,15 +86,15 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="px-5 pb-24 pt-8">
+      <section className="px-5 pb-28 pt-8 sm:pb-24">
         <div className="mx-auto max-w-2xl space-y-8 text-center">
           <div className="space-y-4">
             <h2 className="font-display text-balance text-[2rem] leading-[1.12] tracking-tight sm:text-3xl">
-              Ready to run the factory?
+              Ready to scope the motion?
             </h2>
             <p className="text-[15px] leading-relaxed text-muted">
-              Enter a product brief and watch four agents iterate until the
-              creative clears the launch gate.
+              Enter a product brief. Confirm ICP and signals. Distribute the
+              work. Approve the reach-out cadence.
             </p>
           </div>
 

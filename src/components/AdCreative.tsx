@@ -14,6 +14,8 @@ interface AdCreativeProps {
   producerActive?: boolean;
   skeleton?: boolean;
   showVerdict?: boolean;
+  /** When false, hide the in-card iteration note (useful on landing showcase) */
+  showIterationNote?: boolean;
   className?: string;
 }
 
@@ -22,6 +24,63 @@ const VERDICT_STYLES = {
   close: "bg-close/20 text-close ring-close/30",
   pass: "bg-pass/20 text-pass ring-pass/30",
 } as const;
+
+function CreativeArt({
+  label,
+  designerActive,
+  producing,
+}: {
+  label: AdVariant["label"];
+  designerActive: boolean;
+  producing: boolean;
+}) {
+  if (producing) {
+    return (
+      <div className="relative z-10 flex h-36 w-36 flex-col items-center justify-center gap-2 sm:h-40 sm:w-40">
+        <div className="forge-ring h-7 w-7 rounded-full border-2 border-amber/25 border-t-amber" />
+        <span className="font-mono text-[10px] tracking-wide text-white/70">
+          Rendering…
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      key={label + "-art"}
+      initial={{ scale: 0.92, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 240, damping: 24 }}
+      className={cn(
+        "relative z-10 flex h-36 w-36 items-center justify-center sm:h-40 sm:w-40",
+        designerActive && "shimmer-active"
+      )}
+    >
+      {label === "A" && (
+        <div className="relative h-28 w-28">
+          <div className="absolute inset-0 rounded-[2rem] border border-white/20 bg-white/10 backdrop-blur-xl" />
+          <div className="absolute inset-4 rounded-2xl bg-gradient-to-br from-white/25 to-transparent" />
+          <div className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/40" />
+        </div>
+      )}
+      {label === "B" && (
+        <div className="relative h-28 w-28">
+          <div className="absolute inset-0 rotate-6 rounded-[1.75rem] border border-white/15 bg-white/5" />
+          <div className="absolute inset-0 -rotate-3 rounded-[1.75rem] border border-white/25 bg-white/10 backdrop-blur-xl" />
+          <div className="absolute inset-x-6 top-1/2 h-px -translate-y-1/2 bg-white/35" />
+          <div className="absolute inset-y-6 left-1/2 w-px -translate-x-1/2 bg-white/35" />
+        </div>
+      )}
+      {label === "C" && (
+        <div className="relative h-28 w-28">
+          <div className="absolute inset-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-xl shadow-2xl" />
+          <div className="absolute inset-8 rounded-full bg-gradient-to-tr from-amber/40 to-white/20" />
+          <div className="absolute bottom-3 left-1/2 h-8 w-14 -translate-x-1/2 rounded-t-full bg-white/15" />
+        </div>
+      )}
+    </motion.div>
+  );
+}
 
 export function AdCreative({
   variant,
@@ -32,9 +91,11 @@ export function AdCreative({
   producerActive = false,
   skeleton = false,
   showVerdict = false,
+  showIterationNote,
   className,
 }: AdCreativeProps) {
   const [muted, setMuted] = useState(true);
+  const noteVisible = showIterationNote ?? showVerdict;
   const hasVideo = Boolean(variant.videoUrl);
   const producing =
     variant.videoStatus === "producing" || (producerActive && !hasVideo);
@@ -52,10 +113,10 @@ export function AdCreative({
           <div className="relative z-10 flex flex-col items-center gap-3">
             <div className="forge-ring h-8 w-8 rounded-full border-2 border-amber/20 border-t-amber" />
             <p className="font-mono text-[11px] tracking-wide text-muted">
-              Forging creative…
+              Distributing GTM creative…
             </p>
             <p className="max-w-[14rem] text-center text-[10px] leading-relaxed text-muted/50">
-              Agents writing copy, composing visuals, setting targets
+              Stations writing copy, composing visuals, setting targets
             </p>
           </div>
         </div>
@@ -87,7 +148,6 @@ export function AdCreative({
       )}
       style={{ background: variant.gradient }}
     >
-      {/* Platform chips + verdict */}
       <div className="absolute left-4 right-4 top-4 z-20 flex items-start justify-between gap-2">
         {showVerdict ? (
           <span
@@ -117,7 +177,6 @@ export function AdCreative({
         </div>
       </div>
 
-      {/* Visual plane — video when Producer finishes, else abstract product art */}
       <div
         className={cn(
           "relative flex h-48 items-center justify-center overflow-hidden sm:h-56",
@@ -159,31 +218,11 @@ export function AdCreative({
                   "radial-gradient(circle at 30% 40%, rgba(255,255,255,0.18), transparent 45%), radial-gradient(circle at 70% 60%, rgba(0,0,0,0.35), transparent 50%)",
               }}
             />
-            <motion.div
-              key={variant.id + "-art"}
-              initial={{ scale: 0.92, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 240, damping: 24 }}
-              className="relative z-10 flex h-36 w-36 flex-col items-center justify-center rounded-[2rem] border border-white/15 bg-white/10 shadow-2xl backdrop-blur-xl sm:h-40 sm:w-40"
-            >
-              {producing ? (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="forge-ring h-7 w-7 rounded-full border-2 border-amber/25 border-t-amber" />
-                  <span className="font-mono text-[10px] tracking-wide text-white/70">
-                    Rendering…
-                  </span>
-                </div>
-              ) : (
-                <>
-                  <span className="font-display text-5xl leading-none text-white/90 sm:text-6xl">
-                    {variant.visualEmoji}
-                  </span>
-                  <span className="mt-2 font-mono text-[9px] uppercase tracking-[0.2em] text-white/35">
-                    creative
-                  </span>
-                </>
-              )}
-            </motion.div>
+            <CreativeArt
+              label={variant.label}
+              designerActive={designerActive}
+              producing={producing}
+            />
             <p className="absolute bottom-3 left-0 right-0 z-10 text-center font-mono text-[10px] tracking-wide text-white/45">
               {producing
                 ? "Producer · gemini-omni-flash"
@@ -193,7 +232,6 @@ export function AdCreative({
         )}
       </div>
 
-      {/* Copy */}
       <div className="relative z-10 space-y-3 bg-black/40 px-6 pb-7 pt-5 backdrop-blur-md">
         <motion.h2
           key={variant.headline}
@@ -209,7 +247,7 @@ export function AdCreative({
           {variant.body}
         </p>
 
-        {variant.iterationNote && showVerdict && (
+        {variant.iterationNote && noteVisible && (
           <p className="line-clamp-2 font-mono text-[10px] leading-relaxed text-white/40">
             {variant.iterationNote}
           </p>

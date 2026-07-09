@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AdCreative } from "./AdCreative";
@@ -7,6 +8,7 @@ import { TrustOverlay } from "./TrustOverlay";
 import { FactoryLoop, inferLoopStep } from "./FactoryLoop";
 import type { AdVariant, AgentActivity } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { BENCHMARK_CTR } from "@/lib/demo-data";
 
 interface ForgeCanvasProps {
   variants: AdVariant[];
@@ -15,9 +17,9 @@ interface ForgeCanvasProps {
   activity: AgentActivity;
   statusMessage: string;
   confidence: number;
-  forging: boolean;
-  deployed: boolean;
-  onDeploy: () => void;
+  distributing: boolean;
+  ready: boolean;
+  onApproveReachout: () => void;
   onKill: () => void;
   onReset?: () => void;
 }
@@ -25,8 +27,8 @@ interface ForgeCanvasProps {
 const AGENT_LABELS: { key: keyof AgentActivity; label: string }[] = [
   { key: "copywriter", label: "Copy" },
   { key: "designer", label: "Design" },
-  { key: "media_buyer", label: "Target" },
-  { key: "analyst", label: "Score" },
+  { key: "media_buyer", label: "Audience" },
+  { key: "analyst", label: "Gate" },
   { key: "producer", label: "Video" },
 ];
 
@@ -36,7 +38,7 @@ function agentPillState(
   key: keyof AgentActivity,
   activity: AgentActivity,
   opts: {
-    forging: boolean;
+    distributing: boolean;
     hasVariants: boolean;
     hasPass: boolean;
     videoStatus?: AdVariant["videoStatus"];
@@ -49,13 +51,11 @@ function agentPillState(
     if (activity.producer || opts.videoStatus === "producing") {
       return "generating";
     }
-    // Waiting for a pass before Producer starts
     return opts.hasPass ? "generating" : "idle";
   }
 
   if (activity[key]) return "working";
-  // After agents have produced variants (or forge finished), mark specialists done
-  if (opts.hasVariants && (!opts.forging || opts.hasPass)) return "ready";
+  if (opts.hasVariants && (!opts.distributing || opts.hasPass)) return "ready";
   return "idle";
 }
 
@@ -66,9 +66,9 @@ export function ForgeCanvas({
   activity,
   statusMessage,
   confidence,
-  forging,
-  deployed,
-  onDeploy,
+  distributing,
+  ready,
+  onApproveReachout,
   onKill,
   onReset,
 }: ForgeCanvasProps) {
@@ -78,15 +78,16 @@ export function ForgeCanvas({
   const didSwipe = useRef(false);
 
   const variant = variants[activeIndex] ?? variants[variants.length - 1];
-  const showSkeleton = forging && !variant;
+  const showSkeleton = distributing && !variant;
   const hasPass = variants.some((v) => v.verdict === "pass");
   const passVariant = variants.find((v) => v.verdict === "pass");
   const loopStep = inferLoopStep({
-    forging,
-    deployed,
+    distributing,
+    launched: false,
     statusMessage,
     hasPass,
     variantCount: variants.length,
+    hasScope: true,
   });
 
   const clearHold = useCallback(() => {
@@ -126,11 +127,10 @@ export function ForgeCanvas({
       if (e.key === "ArrowLeft") goPrev();
       if (e.key === "ArrowRight") goNext();
       if (e.key === "t" || e.key === "T") setTrustOpen(true);
-      if (e.key === "Escape" && onReset) onReset();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [goPrev, goNext, trustOpen, onReset]);
+  }, [goPrev, goNext, trustOpen]);
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -161,26 +161,41 @@ export function ForgeCanvas({
       passVariant?.videoStatus !== "failed" &&
       passVariant?.videoStatus !== "ready");
 
-  // Pass unlocks the workflow even while video still renders in background
-  const workflowUnlocked = hasPass || !forging;
+  // Pass unlocks Approve even while video still renders in background
+  const workflowUnlocked = ready || hasPass;
 
   const ctaLabel = (() => {
-    if (deployed) return "Live on Meta · Facebook + Instagram";
-    if (!workflowUnlocked) return "Factory iterating…";
-    if (variant?.verdict === "pass") return "Approve & Launch";
+    if (distributing && !hasPass) return "Distributing work…";
+    if (variant?.verdict === "pass") return "Approve → plan reach-out";
     if (hasPass) return `Jump to winner · Variant ${passVariant?.label}`;
-    return "Waiting for a launch-ready variant…";
+    return "Waiting for a gate-ready variant…";
   })();
 
   const canJumpToWinner =
-    workflowUnlocked && !deployed && hasPass && variant?.verdict !== "pass";
-  const canDeploy =
-    workflowUnlocked && !deployed && variant?.verdict === "pass";
-  const ctaDisabled = !canDeploy && !canJumpToWinner;
+    workflowUnlocked &&
+    !distributing &&
+    hasPass &&
+    variant?.verdict !== "pass";
+  const canApprove =
+    workflowUnlocked &&
+    !distributing &&
+    variant?.verdict === "pass";
+  const ctaDisabled = !canApprove && !canJumpToWinner;
+
+  const requestNewBrief = () => {
+    if (!onReset) return;
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm("Start a new brief? Current progress will be cleared.")
+    ) {
+      return;
+    }
+    onReset();
+  };
 
   const onCta = () => {
-    if (canDeploy) {
-      onDeploy();
+    if (canApprove) {
+      onApproveReachout();
       return;
     }
     if (canJumpToWinner) jumpToPass();
@@ -191,36 +206,41 @@ export function ForgeCanvas({
       <header className="flex items-center justify-between gap-3 px-5 pb-1 pt-[max(1rem,env(safe-area-inset-top))]">
         <button
           type="button"
-          onClick={onReset}
+          onClick={requestNewBrief}
           className="text-[11px] font-medium uppercase tracking-[0.22em] text-amber/75 transition hover:text-amber-bright"
-          title="New brief"
+          title="Start a new brief"
         >
-          GTM Factory
+          New brief
         </button>
-        <button
-          type="button"
-          onClick={() => setTrustOpen(true)}
-          className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 font-mono text-[10px] tracking-wide text-muted transition hover:border-amber/30 hover:text-amber-bright"
-        >
-          Gate{confidence > 0 ? ` · ${confidence}%` : ""}
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/"
+            className="rounded-full px-2 py-1 font-mono text-[10px] tracking-wide text-muted/55 transition hover:text-amber-bright"
+            title="Back to landing"
+          >
+            Home
+          </Link>
+          <button
+            type="button"
+            onClick={() => setTrustOpen(true)}
+            className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 font-mono text-[10px] tracking-wide text-muted transition hover:border-amber/30 hover:text-amber-bright"
+          >
+            Gate{confidence > 0 ? ` · ${confidence}%` : ""}
+          </button>
+        </div>
       </header>
 
-      {/* GTM factory stations */}
       <div className="px-5 pb-0.5 pt-1">
         <FactoryLoop
           compact
-          active={forging && !hasPass ? loopStep : null}
+          active={distributing ? loopStep ?? "distribute" : null}
           completedThrough={
-            deployed
-              ? "launch"
-              : hasPass
-                ? "launch"
-                : variants.some(
-                    (v) => v.verdict === "fail" || v.verdict === "close"
-                  )
-                  ? "iterate"
-                  : null
+            hasPass ||
+            variants.some(
+              (v) => v.verdict === "fail" || v.verdict === "close"
+            )
+              ? "distribute"
+              : "scope"
           }
         />
       </div>
@@ -230,7 +250,7 @@ export function ForgeCanvas({
         <div className="flex flex-wrap items-center justify-center gap-1.5">
           {AGENT_LABELS.map(({ key, label }) => {
             const state = agentPillState(key, activity, {
-              forging,
+              distributing,
               hasVariants: variants.length > 0,
               hasPass,
               videoStatus: passVariant?.videoStatus,
@@ -295,7 +315,6 @@ export function ForgeCanvas({
         ) : null}
       </div>
 
-      {/* Canvas */}
       <div
         className="relative flex min-h-0 flex-1 flex-col justify-center px-4 py-2 select-none outline-none"
         tabIndex={0}
@@ -357,13 +376,12 @@ export function ForgeCanvas({
                 mediaBuyerActive={activity.media_buyer}
                 analystActive={activity.analyst}
                 producerActive={activity.producer}
-                showVerdict={workflowUnlocked}
+                showVerdict={!distributing}
               />
             </motion.div>
           ) : null}
         </AnimatePresence>
 
-        {/* Live status under creative */}
         <p className="mt-3 min-h-[1.25rem] text-center font-mono text-[11px] text-muted/80">
           {statusMessage || (anyActive ? "Agents working…" : "")}
         </p>
@@ -372,36 +390,17 @@ export function ForgeCanvas({
           open={trustOpen}
           variants={variants}
           confidence={confidence}
-          forging={forging}
+          distributing={distributing}
           onClose={() => setTrustOpen(false)}
           onKill={() => {
             setTrustOpen(false);
             onKill();
           }}
         />
-
-        {/* Deploy toast — celebrates without burying the creative */}
-        <AnimatePresence>
-          {deployed && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="pointer-events-none absolute left-4 right-4 top-2 z-30 flex justify-center"
-            >
-              <div className="rounded-full border border-pass/35 bg-pass/15 px-4 py-2 text-center shadow-lg backdrop-blur-md">
-                <p className="font-mono text-[11px] font-medium text-pass">
-                  Launched · GTM factory complete
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
-      {/* Bottom bar — always visible CTA */}
       <footer className="shrink-0 space-y-2.5 border-t border-white/[0.04] bg-background/80 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md">
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-3">
           <div className="flex items-center gap-1.5">
             {variants.length > 0 ? (
               variants.map((v, i) => (
@@ -423,8 +422,7 @@ export function ForgeCanvas({
                       "absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full",
                       v.verdict === "pass" && "bg-pass",
                       v.verdict === "close" && "bg-close",
-                      v.verdict === "fail" && "bg-fail",
-                      i === activeIndex && "opacity-0"
+                      v.verdict === "fail" && "bg-fail"
                     )}
                   />
                 </button>
@@ -436,14 +434,13 @@ export function ForgeCanvas({
             )}
           </div>
           {variant && (
-            <>
-              <span className="text-white/15">·</span>
+            <div className="flex items-center gap-2 font-mono text-sm tabular-nums">
               <motion.span
                 key={variant.ctr}
                 initial={{ opacity: 0, y: 6, filter: "blur(3px)" }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 className={cn(
-                  "font-mono text-sm font-medium tabular-nums",
+                  "font-medium",
                   variant.verdict === "pass" && "text-pass",
                   variant.verdict === "close" && "text-close",
                   variant.verdict === "fail" && "text-fail",
@@ -453,52 +450,41 @@ export function ForgeCanvas({
                 {variant.ctr}% CTR
               </motion.span>
               <span className="text-white/15">·</span>
-              <span className="font-mono text-sm tabular-nums text-muted">
+              <span className="text-muted">
                 {formatRevenue(variant.revenueForecast)}
               </span>
-            </>
+              {!distributing && (
+                <>
+                  <span className="text-white/15">·</span>
+                  <span className="text-[11px] text-muted/55">
+                    gate ≥{BENCHMARK_CTR}%
+                  </span>
+                </>
+              )}
+            </div>
           )}
         </div>
 
-        {deployed ? (
-          <div className="grid grid-cols-1 gap-2">
-            <button
-              type="button"
-              disabled
-              className="w-full rounded-2xl bg-pass/15 py-3.5 text-[15px] font-semibold text-pass"
-            >
-              {ctaLabel}
-            </button>
-            <button
-              type="button"
-              onClick={onReset}
-              className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.03] py-3 text-[14px] font-medium text-foreground/80 transition hover:border-amber/30 hover:text-amber-bright"
-            >
-              Run another GTM loop
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            disabled={ctaDisabled}
-            onClick={onCta}
-            className={cn(
-              "relative w-full overflow-hidden rounded-2xl py-3.5 text-[15px] font-semibold transition",
-              canJumpToWinner
-                ? "border border-amber/30 bg-amber/10 text-amber-bright hover:bg-amber/15"
-                : "bg-amber text-[#1a1408] hover:bg-amber-bright disabled:cursor-not-allowed disabled:opacity-35"
-            )}
-          >
-            {ctaLabel}
-          </button>
-        )}
+        <button
+          type="button"
+          disabled={ctaDisabled}
+          onClick={onCta}
+          className={cn(
+            "relative w-full overflow-hidden rounded-2xl py-3.5 text-[15px] font-semibold transition",
+            canJumpToWinner
+              ? "border border-amber/30 bg-amber/10 text-amber-bright hover:bg-amber/15"
+              : "bg-amber text-[#1a1408] hover:bg-amber-bright disabled:cursor-not-allowed disabled:opacity-35"
+          )}
+        >
+          {ctaLabel}
+        </button>
 
         <p className="text-center text-[10px] text-muted/45">
-          {!workflowUnlocked
+          {distributing && !hasPass
             ? "Hold for gate · Kill switch inside"
             : videoBusy
-              ? "Video rendering in background · swipe & launch anytime"
-              : "Swipe to compare · Hold for launch gate"}
+              ? "Video rendering in background · swipe & approve anytime"
+              : "Swipe to compare · Hold for distribution gate"}
         </p>
       </footer>
     </div>

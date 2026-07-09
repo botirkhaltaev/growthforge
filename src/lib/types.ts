@@ -17,10 +17,36 @@ export type CampaignEventType =
   | "tester"
   | "variant_ready"
   | "iteration"
+  | "task_assigned"
+  | "scope_ready"
+  | "reachout_ready"
   | "complete"
   | "error";
 
 export type VideoStatus = "idle" | "producing" | "ready" | "failed";
+
+export interface GtmChannel {
+  name: string;
+  budgetShare: number;
+}
+
+export interface GtmScope {
+  icp: string;
+  signals: string[];
+  audienceCount: number;
+  channels: GtmChannel[];
+  positioning?: string;
+}
+
+export type ReachoutChannel = "meta_ads" | "email" | "linkedin_dm";
+
+export interface ReachoutTouch {
+  day: number;
+  channel: ReachoutChannel;
+  title: string;
+  snippet: string;
+  status: "live" | "queued";
+}
 
 export interface CampaignEvent {
   type: CampaignEventType;
@@ -28,8 +54,11 @@ export interface CampaignEvent {
   message?: string;
   content?: string;
   model?: string;
+  task?: string;
   variant?: AdVariant;
   variants?: AdVariant[];
+  scope?: GtmScope;
+  reachout?: ReachoutTouch[];
   iteration?: number;
   confidence?: number;
 }
@@ -65,7 +94,14 @@ export interface CampaignBrief {
   audience?: string;
 }
 
-export type ForgePhase = "brief" | "forging" | "ready" | "deployed";
+export type ForgePhase =
+  | "brief"
+  | "scoping"
+  | "scope_ready"
+  | "distributing"
+  | "ready"
+  | "reachout"
+  | "launched";
 
 export interface AgentActivity {
   copywriter: boolean;
