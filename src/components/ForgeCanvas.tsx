@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AdCreative } from "./AdCreative";
 import { TrustOverlay } from "./TrustOverlay";
+import { FactoryLoop, inferLoopStep } from "./FactoryLoop";
 import type { AdVariant, AgentActivity } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +49,15 @@ export function ForgeCanvas({
 
   const variant = variants[activeIndex] ?? variants[variants.length - 1];
   const showSkeleton = forging && !variant;
+  const hasPass = variants.some((v) => v.verdict === "pass");
+  const passVariant = variants.find((v) => v.verdict === "pass");
+  const loopStep = inferLoopStep({
+    forging,
+    deployed,
+    statusMessage,
+    hasPass,
+    variantCount: variants.length,
+  });
 
   const clearHold = useCallback(() => {
     if (holdTimer.current) {
@@ -63,12 +73,34 @@ export function ForgeCanvas({
     }, 500);
   }, []);
 
-  const goPrev = () => {
+  const goPrev = useCallback(() => {
     if (activeIndex > 0) onIndexChange(activeIndex - 1);
-  };
-  const goNext = () => {
+  }, [activeIndex, onIndexChange]);
+
+  const goNext = useCallback(() => {
     if (activeIndex < variants.length - 1) onIndexChange(activeIndex + 1);
-  };
+  }, [activeIndex, onIndexChange, variants.length]);
+
+  const jumpToPass = useCallback(() => {
+    if (!passVariant) return;
+    const idx = variants.findIndex((v) => v.id === passVariant.id);
+    if (idx >= 0) onIndexChange(idx);
+  }, [passVariant, variants, onIndexChange]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (trustOpen) {
+        if (e.key === "Escape") setTrustOpen(false);
+        return;
+      }
+      if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "ArrowRight") goNext();
+      if (e.key === "t" || e.key === "T") setTrustOpen(true);
+      if (e.key === "Escape" && onReset) onReset();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [goPrev, goNext, trustOpen, onReset]);
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -91,6 +123,28 @@ export function ForgeCanvas({
 
   const anyActive = Object.values(activity).some(Boolean);
 
+  const ctaLabel = (() => {
+    if (deployed) return "Live on Meta · Facebook + Instagram";
+    if (forging) return "Agents iterating…";
+    if (variant?.verdict === "pass") return "Approve & Deploy";
+    if (hasPass) return `Jump to winner · Variant ${passVariant?.label}`;
+    return "Waiting for a passing variant…";
+  })();
+
+  const canJumpToWinner =
+    !forging && !deployed && hasPass && variant?.verdict !== "pass";
+  const canDeploy =
+    !forging && !deployed && variant?.verdict === "pass";
+  const ctaDisabled = !canDeploy && !canJumpToWinner;
+
+  const onCta = () => {
+    if (canDeploy) {
+      onDeploy();
+      return;
+    }
+    if (canJumpToWinner) jumpToPass();
+  };
+
   return (
     <div className="relative flex min-h-dvh flex-col">
       <header className="flex items-center justify-between gap-3 px-5 pb-1 pt-[max(1rem,env(safe-area-inset-top))]">
@@ -98,6 +152,7 @@ export function ForgeCanvas({
           type="button"
           onClick={onReset}
           className="text-[11px] font-medium uppercase tracking-[0.22em] text-amber/75 transition hover:text-amber-bright"
+          title="New brief"
         >
           Growth Forge
         </button>
@@ -106,31 +161,50 @@ export function ForgeCanvas({
           onClick={() => setTrustOpen(true)}
           className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 font-mono text-[10px] tracking-wide text-muted transition hover:border-amber/30 hover:text-amber-bright"
         >
-          Trust {confidence > 0 ? `· ${confidence}%` : ""}
+          Trust{confidence > 0 ? ` · ${confidence}%` : ""}
         </button>
       </header>
 
-      {/* Agent activity strip */}
-      <div className="flex items-center justify-center gap-2 px-5 py-2">
-        {AGENT_LABELS.map(({ key, label }) => {
-          const on = activity[key];
-          return (
-            <span
-              key={key}
-              className={cn(
-                "rounded-full px-2.5 py-1 font-mono text-[10px] tracking-wide transition",
-                on
-                  ? "bg-amber/15 text-amber-bright ring-1 ring-amber/30"
-                  : "text-muted/50"
-              )}
-            >
-              {label}
-              {on && (
+      {/* Factory loop — thesis made visible, chrome kept thin */}
+      <div className="px-5 pt-1 pb-0.5">
+        <FactoryLoop
+          compact
+          active={forging && !hasPass ? loopStep : null}
+          completedThrough={
+            deployed || hasPass
+              ? "pass"
+              : variants.some(
+                  (v) => v.verdict === "fail" || v.verdict === "close"
+                )
+                ? "fail"
+                : null
+          }
+        />
+      </div>
+
+      {/* Ambient agent strip — only lit agents, never a dashboard */}
+      <div className="flex h-7 items-center justify-center gap-1.5 px-5">
+        {anyActive ? (
+          AGENT_LABELS.filter(({ key }) => activity[key]).map(
+            ({ key, label }) => (
+              <span
+                key={key}
+                className="rounded-full bg-amber/15 px-2.5 py-1 font-mono text-[10px] tracking-wide text-amber-bright ring-1 ring-amber/30"
+              >
+                {label}
                 <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-bright" />
-              )}
-            </span>
-          );
-        })}
+              </span>
+            )
+          )
+        ) : (
+          <span className="font-mono text-[10px] text-muted/35">
+            {forging
+              ? "Agents on the creative…"
+              : deployed
+                ? "Loop complete"
+                : "Creative is the interface"}
+          </span>
+        )}
       </div>
 
       {/* Canvas */}
@@ -193,6 +267,7 @@ export function ForgeCanvas({
                 designerActive={activity.designer}
                 mediaBuyerActive={activity.media_buyer}
                 analystActive={activity.analyst}
+                showVerdict={!forging || variants.length > 0}
               />
             </motion.div>
           ) : null}
@@ -203,7 +278,7 @@ export function ForgeCanvas({
           {statusMessage || (anyActive ? "Agents working…" : "")}
         </p>
 
-        {variants.length > 1 && !forging && (
+        {variants.length > 1 && (
           <div className="mt-2 hidden justify-center gap-8 sm:flex">
             <button
               type="button"
@@ -228,40 +303,68 @@ export function ForgeCanvas({
           open={trustOpen}
           variants={variants}
           confidence={confidence}
+          forging={forging}
           onClose={() => setTrustOpen(false)}
           onKill={() => {
             setTrustOpen(false);
             onKill();
           }}
         />
+
+        {/* Deploy toast — celebrates without burying the creative */}
+        <AnimatePresence>
+          {deployed && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="pointer-events-none absolute left-4 right-4 top-2 z-30 flex justify-center"
+            >
+              <div className="rounded-full border border-pass/35 bg-pass/15 px-4 py-2 text-center shadow-lg backdrop-blur-md">
+                <p className="font-mono text-[11px] font-medium text-pass">
+                  Deployed · factory loop complete
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Bottom bar */}
       <footer className="space-y-3.5 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-1">
         <div className="flex items-center justify-center gap-3.5">
           <div className="flex items-center gap-1.5">
-            {variants.length > 0
-              ? variants.map((v, i) => (
-                  <button
-                    key={v.id}
-                    type="button"
-                    aria-label={`Variant ${v.label}`}
-                    onClick={() => onIndexChange(i)}
+            {variants.length > 0 ? (
+              variants.map((v, i) => (
+                <button
+                  key={v.id}
+                  type="button"
+                  aria-label={`Variant ${v.label} · ${v.verdict}`}
+                  onClick={() => onIndexChange(i)}
+                  className={cn(
+                    "relative flex h-7 min-w-7 items-center justify-center rounded-full px-2 font-mono text-[11px] font-medium transition",
+                    i === activeIndex
+                      ? "bg-amber text-[#1a1408]"
+                      : "bg-white/[0.06] text-muted"
+                  )}
+                >
+                  {v.label}
+                  <span
                     className={cn(
-                      "flex h-7 min-w-7 items-center justify-center rounded-full px-2 font-mono text-[11px] font-medium transition",
-                      i === activeIndex
-                        ? "bg-amber text-[#1a1408]"
-                        : "bg-white/[0.06] text-muted"
+                      "absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full",
+                      v.verdict === "pass" && "bg-pass",
+                      v.verdict === "close" && "bg-close",
+                      v.verdict === "fail" && "bg-fail",
+                      i === activeIndex && "opacity-0"
                     )}
-                  >
-                    {v.label}
-                  </button>
-                ))
-              : (
-                  <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-white/[0.06] px-2 font-mono text-[11px] text-muted/50">
-                    —
-                  </span>
-                )}
+                  />
+                </button>
+              ))
+            ) : (
+              <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-white/[0.06] px-2 font-mono text-[11px] text-muted/50">
+                —
+              </span>
+            )}
           </div>
           {variant && (
             <>
@@ -288,28 +391,41 @@ export function ForgeCanvas({
           )}
         </div>
 
-        <button
-          type="button"
-          disabled={forging || deployed || !variant || variant.verdict !== "pass"}
-          onClick={onDeploy}
-          className={cn(
-            "relative w-full overflow-hidden rounded-2xl py-3.5 text-[15px] font-semibold transition",
-            deployed
-              ? "bg-pass/15 text-pass"
-              : "bg-amber text-[#1a1408] hover:bg-amber-bright disabled:cursor-not-allowed disabled:opacity-35"
-          )}
-        >
-          {deployed
-            ? "Live on Meta · Facebook + Instagram"
-            : forging
-              ? "Agents iterating…"
-              : variant?.verdict === "pass"
-                ? "Approve & Deploy"
-                : "Waiting for a passing variant…"}
-        </button>
+        {deployed ? (
+          <div className="grid grid-cols-1 gap-2">
+            <button
+              type="button"
+              disabled
+              className="w-full rounded-2xl bg-pass/15 py-3.5 text-[15px] font-semibold text-pass"
+            >
+              {ctaLabel}
+            </button>
+            <button
+              type="button"
+              onClick={onReset}
+              className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.03] py-3 text-[14px] font-medium text-foreground/80 transition hover:border-amber/30 hover:text-amber-bright"
+            >
+              Forge another campaign
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled={ctaDisabled}
+            onClick={onCta}
+            className={cn(
+              "relative w-full overflow-hidden rounded-2xl py-3.5 text-[15px] font-semibold transition",
+              canJumpToWinner
+                ? "border border-amber/30 bg-amber/10 text-amber-bright hover:bg-amber/15"
+                : "bg-amber text-[#1a1408] hover:bg-amber-bright disabled:cursor-not-allowed disabled:opacity-35"
+            )}
+          >
+            {ctaLabel}
+          </button>
+        )}
 
         <p className="text-center text-[10px] text-muted/50">
-          Swipe to compare · Trust for oversight
+          Swipe or ← → to compare · Hold / T for trust · Esc for new brief
         </p>
       </footer>
     </div>

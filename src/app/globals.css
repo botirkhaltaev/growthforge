@@ -145,13 +145,28 @@ body {
   animation: forge-spin 1.2s linear infinite;
 }
 
+@keyframes loop-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(232, 184, 74, 0.25);
+  }
+}
+
+.loop-pulse {
+  animation: loop-pulse 1.6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .glow-amber,
   .shimmer-active,
   .pulse-platform,
   .metric-refresh,
   .skeleton-breathe,
-  .forge-ring {
+  .forge-ring,
+  .loop-pulse {
     animation: none !important;
   }
 }
@@ -164,4 +179,10 @@ textarea:focus-visible,
 button:focus-visible {
   outline: 2px solid rgba(232, 184, 74, 0.55);
   outline-offset: 2px;
+}
+
+/* Subtle scrollbar for trust lists on small screens */
+.trust-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(232, 184, 74, 0.35) transparent;
 }

@@ -28,10 +28,20 @@ npm run dev
 
 ## Demo flow
 
-1. Enter a product brief → **Forge Campaign**
-2. Watch four agents activate on the creative (amber glow, shimmer, platform pulse)
-3. Swipe between variants A (1.2%) → B (2.8%) → C (4.1%)
-4. Hold for trust overlay · **Approve & Deploy**
+1. Pick an example chip (or edit the brief) → **Forge Campaign**
+2. Watch the factory loop: **Create → Test → Fail → Fix → Pass**
+3. Ambient agent activity on the creative (amber glow, shimmer, platform pulse)
+4. Swipe / ← → between variants A (1.2% FAIL) → B (2.8% CLOSE) → C (4.1% PASS)
+5. Hold or press **T** for trust overlay · **Approve & Deploy**
+6. **Forge another campaign** to loop again
+
+### Keyboard
+
+| Key | Action |
+|-----|--------|
+| ← / → | Compare variants |
+| T | Trust / oversight |
+| Esc | Close trust · or new brief |
 
 ## Env
 

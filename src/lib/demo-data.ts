@@ -72,11 +72,15 @@ export async function* demoCampaignStream(
 
   yield {
     type: "system",
-    message: `Creating foreman for: ${product.slice(0, 80)}…`,
+    message: `Factory loop starting · ${product.slice(0, 64)}…`,
   };
   await sleep(400);
 
-  yield { type: "agent_created", role: "foreman", message: "Foreman online" };
+  yield {
+    type: "agent_created",
+    role: "foreman",
+    message: "Foreman online · create → test → fail → fix → pass",
+  };
   await sleep(300);
 
   yield {
@@ -224,6 +228,6 @@ export async function* demoCampaignStream(
     type: "complete",
     variants: DEMO_VARIANTS,
     confidence: 94,
-    message: "All gates passed. Ready to deploy.",
+    message: "Loop complete · Variant C passed 3% CTR. Ready to deploy.",
   };
 }
