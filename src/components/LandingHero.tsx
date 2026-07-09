@@ -49,8 +49,8 @@ export function LandingHero() {
           custom={1}
           className="font-display text-balance text-[2.75rem] leading-[1.06] tracking-tight sm:text-[3.5rem] lg:text-[4rem]"
         >
-          A go-to-market factory{" "}
-          <em className="not-italic text-amber-bright">in your pocket</em>
+          Scope. Distribute.{" "}
+          <em className="not-italic text-amber-bright">Reach out.</em>
         </motion.h1>
 
         <motion.p
@@ -58,8 +58,8 @@ export function LandingHero() {
           custom={2}
           className="mx-auto max-w-xl text-[16px] leading-relaxed text-muted sm:text-[17px]"
         >
-          Four Cursor agents create, test, and iterate campaign creative until
-          it clears the launch gate. The ad is the interface — not a dashboard.
+          Scope the motion. Distribute the work across agents. Reach the market
+          with a multi-touch cadence — replies feed back into the factory.
         </motion.p>
 
         <motion.div
@@ -85,15 +85,18 @@ export function LandingHero() {
         <motion.div
           variants={fadeUp}
           custom={4}
-          className="flex items-center justify-center gap-3 pt-2 font-mono text-[11px] text-muted/60"
+          className="flex flex-col items-center gap-2 pt-2"
         >
-          <span>Create</span>
-          <span className="text-white/15">→</span>
-          <span>Test</span>
-          <span className="text-white/15">→</span>
-          <span>Iterate</span>
-          <span className="text-white/15">→</span>
-          <span className="text-pass/80">Launch</span>
+          <div className="flex items-center justify-center gap-3 font-mono text-[11px] text-muted/60">
+            <span>Scope</span>
+            <span className="text-white/15">→</span>
+            <span>Distribute</span>
+            <span className="text-white/15">→</span>
+            <span className="text-pass/80">Reach out</span>
+          </div>
+          <p className="font-mono text-[9px] tracking-wide text-muted/40">
+            scope the motion · distribute the work · reach the market
+          </p>
         </motion.div>
       </motion.div>
 

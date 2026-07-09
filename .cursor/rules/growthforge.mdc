@@ -8,13 +8,17 @@ globs:
 
 - Next.js App Router + React + TypeScript + Tailwind + Framer Motion
 - `@cursor/sdk` for real agent orchestration (parallel agents, not fictional subagent delegation)
-- Generative UI: the ad creative IS the interface (~80% of screen)
+- Generative UI: the ad creative IS the interface during Distribute (~80% of screen)
 - Dark theme: `#0A0A0F` background, amber glows, minimal chrome
 - Ambient agent activity: CSS text-shadow pulse, hue-rotate shimmer — NOT progress bars or agent cards
 - Framer Motion: AnimatePresence for version morph, layout animations
-- Mobile-first: swipe for version comparison, hold for launch-gate overlay
+- Mobile-first: swipe for version comparison, hold for distribution-gate overlay
 - DEMO_MODE=true on Vercel (theatrical SSE). DEMO_MODE=false locally for real SDK
-- GTM factory stations: Create → Test → Iterate → Launch
-- One primary action: Approve & Launch
+- GTM stations: Scope → Distribute → Reach out
+  - Scope = ICP + buying signals + channel mix + audience count
+  - Distribute = work assigned across agents; test/iterate until ≥3% CTR gate
+  - Reach out = multi-touch cadence (Meta + email + LinkedIn) with replies feeding back
+- One primary action per screen (Scope it / Distribute the work / Approve → plan reach-out / Send it)
 - Keep UI calm — output-first, chrome-last
 - Routes: `/` landing, `/forge` interactive factory
+- API: `POST /api/campaign` with `stage: "scope" | "distribute"`

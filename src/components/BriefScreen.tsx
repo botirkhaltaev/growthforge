@@ -63,16 +63,20 @@ export function BriefScreen({
             GTM factory
           </motion.p>
           <h1 className="font-display text-balance text-[2.75rem] leading-[1.08] tracking-tight text-foreground sm:text-5xl">
-            What are you{" "}
-            <em className="not-italic text-amber-bright">launching?</em>
+            Scope your{" "}
+            <em className="not-italic text-amber-bright">go-to-market</em>
           </h1>
           <p className="mx-auto max-w-sm text-[15px] leading-relaxed text-muted">
-            Brief in. Agents create, test, and iterate GTM creative until it
-            clears the gate — then you launch.
+            Brief in. Agents scope ICP and signals, distribute the work, then
+            plan the reach-out cadence.
           </p>
         </div>
 
-        <FactoryLoop completedThrough={null} className="opacity-70" />
+        <FactoryLoop
+          completedThrough={null}
+          showCaption
+          className="opacity-70"
+        />
 
         <form
           onSubmit={(e) => {
@@ -134,10 +138,10 @@ export function BriefScreen({
               {loading ? (
                 <>
                   <span className="forge-ring inline-block h-3.5 w-3.5 rounded-full border-2 border-[#1a1408]/30 border-t-[#1a1408]" />
-                  Running factory…
+                  Scoping…
                 </>
               ) : (
-                "Run GTM Factory"
+                "Scope it"
               )}
             </span>
           </button>
@@ -153,9 +157,9 @@ export function BriefScreen({
         </form>
 
         <p className="text-center text-[11px] leading-relaxed text-muted/55">
-          create → test → iterate → launch · gate ≥ 3% CTR
-          <span className="mx-1.5 text-white/20">·</span>
-          ⌘↵ to run
+          scope → distribute → reach out · gate ≥ 3% CTR
+          <span className="mx-1.5 hidden text-white/20 sm:inline">·</span>
+          <span className="hidden sm:inline">⌘↵ to scope</span>
         </p>
       </motion.div>
     </div>

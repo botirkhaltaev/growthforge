@@ -95,7 +95,7 @@ export function AdCreative({
           <div className="relative z-10 flex flex-col items-center gap-3">
             <div className="forge-ring h-8 w-8 rounded-full border-2 border-amber/20 border-t-amber" />
             <p className="font-mono text-[11px] tracking-wide text-muted">
-              Creating GTM creative…
+              Distributing GTM creative…
             </p>
             <p className="max-w-[14rem] text-center text-[10px] leading-relaxed text-muted/50">
               Stations writing copy, composing visuals, setting targets

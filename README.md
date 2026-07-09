@@ -2,20 +2,26 @@
 
 GTM factory for the Cursor iOS London Hackathon.
 
-**Thesis:** Apply a go-to-market stage-gate (`create → test → iterate → launch`) to growth creative — with the generated ad as the only interface.
+**Thesis:** Apply a GTM person's real workflow (`scope → distribute → reach out`) to growth creative — with the generated ad as the interface during distribution, and a multi-touch cadence as the reach-out plan.
+
+## Workflow
+
+1. **Scope** — brief in; agents propose ICP, buying signals, channel mix, and matched-audience count. Confirm with one tap.
+2. **Distribute** — work is assigned across Copywriter, Designer, Media Buyer, and Analyst. They produce and test variants until one clears the ≥3% CTR gate.
+3. **Reach out** — the winner fans into a cadence (Meta ads · Day 0 email · Day 2 LinkedIn · Day 5 bump). Approve → live, with replies routing back to the factory.
 
 ## Stack
 
 - Next.js App Router + TypeScript + Tailwind + Framer Motion
 - `@cursor/sdk` — parallel Cursor agents (Copywriter, Designer, Media Buyer, Analyst)
-- Generative UI — ambient agent glows, swipe-to-morph variants, hold-for-launch-gate
+- Generative UI — ambient agent glows, swipe-to-morph variants, hold-for-distribution-gate
 
 ## Modes
 
 | Mode | When | Behavior |
 |------|------|----------|
-| `DEMO_MODE=true` (default) | Vercel / live demo | Theatrical SSE with pre-generated variants A/B/C |
-| `DEMO_MODE=false` | Local `next dev` with Cursor | Real `@cursor/sdk` parallel agents |
+| `DEMO_MODE=true` (default) | Vercel / live demo | Theatrical SSE with scope pause + variants A/B/C + reach-out cadence |
+| `DEMO_MODE=false` | Local `next dev` with Cursor | Real `@cursor/sdk` parallel agents (scope still theatrical) |
 
 ## Setup
 
@@ -30,25 +36,26 @@ npm run dev
 
 | Path | What |
 |------|------|
-| `/` | Marketing landing — GTM thesis, factory stations, A/B/C showcase |
-| `/forge` | Interactive GTM factory — brief → create/test/iterate → launch |
+| `/` | Marketing landing — GTM thesis, work distribution, A/B/C showcase |
+| `/forge` | Interactive GTM factory — brief → scope → distribute → reach out |
 
 ## Demo flow
 
 1. From `/` → **Run GTM Factory** (or open `/forge`)
-2. Pick an example chip (or edit the brief) → **Run GTM Factory**
-3. Watch stations: **Create → Test → Iterate → Launch**
-4. Ambient agent activity on the creative (amber glow, shimmer, platform pulse)
+2. Pick an example chip → **Scope it**
+3. Confirm ICP / signals / channels → **Distribute the work**
+4. Watch stations: **Scope → Distribute → Reach out**
 5. Swipe / ← → between variants A (1.2% FAIL) → B (2.8% CLOSE) → C (4.1% PASS)
-6. Hold or press **T** for launch gate · **Approve & Launch**
-7. **Run another GTM loop** to start again
+6. Hold or press **T** for distribution gate · **Approve → plan reach-out**
+7. Review cadence → **Send it** · replies feed back
+8. **Scope another motion** to start again
 
 ### Keyboard
 
 | Key | Action |
 |-----|--------|
 | ← / → | Compare variants |
-| T | Launch gate / oversight |
+| T | Distribution gate / oversight |
 | Esc | Close gate · or new brief |
 
 ## Env

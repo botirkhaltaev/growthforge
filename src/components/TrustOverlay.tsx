@@ -9,7 +9,7 @@ interface TrustOverlayProps {
   variants: AdVariant[];
   confidence: number;
   agentCount?: number;
-  forging?: boolean;
+  distributing?: boolean;
   onClose?: () => void;
   onKill?: () => void;
 }
@@ -19,7 +19,7 @@ export function TrustOverlay({
   variants,
   confidence,
   agentCount = 4,
-  forging = false,
+  distributing = false,
   onClose,
   onKill,
 }: TrustOverlayProps) {
@@ -51,7 +51,7 @@ export function TrustOverlay({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-amber/80">
-                  Launch gate
+                  Distribution gate
                 </p>
                 <h2
                   id="trust-title"
@@ -73,9 +73,9 @@ export function TrustOverlay({
             <FactoryLoop
               className="mt-4"
               compact
-              active={forging ? "iterate" : null}
+              active={distributing ? "distribute" : null}
               completedThrough={
-                hasPass ? "launch" : variants.length > 0 ? "iterate" : null
+                hasPass ? "distribute" : variants.length > 0 ? "distribute" : "scope"
               }
             />
 
@@ -85,12 +85,12 @@ export function TrustOverlay({
                 value={`${agentCount} specialists · parallel`}
               />
               <Row
-                label="Iterations"
-                value={`${iterations} · create→test→iterate`}
+                label="Work distributed"
+                value={`${iterations} variants · scope→distribute`}
               />
               <Row label="Gate confidence" value={`${confidence}%`} accent />
               <Row
-                label="Launch candidate"
+                label="Reach-out candidate"
                 value={
                   winner
                     ? `Variant ${winner.label} · ${winner.ctr}% CTR`
@@ -129,7 +129,7 @@ export function TrustOverlay({
               </ul>
             )}
 
-            {forging ? (
+            {distributing ? (
               <button
                 type="button"
                 onClick={onKill}
