@@ -186,21 +186,53 @@ export default function ForgePage() {
       ...IDLE_ACTIVITY,
       producer: prev.producer,
     }));
-    if (message) setStatusMessage(message);
+    if (message) {
+      setStatusMessage((prev) => {
+        const p = prev.toLowerCase();
+        if (
+          p.includes("gate cleared") ||
+          p.includes("pass ·") ||
+          p.includes("cleared 3%") ||
+          p.includes("video rendering in background") ||
+          p.includes("video ad ready")
+        ) {
+          return prev;
+        }
+        return message;
+      });
+    }
   }, []);
 
   const handleEvent = useCallback(
     (event: CampaignEvent) => {
+      const setStatusIfDistributing = (message?: string) => {
+        if (!message) return;
+        setStatusMessage((prev) => {
+          // Once gate is cleared / ready, don't let late SSE chatter overwrite
+          const p = prev.toLowerCase();
+          if (
+            p.includes("gate cleared") ||
+            p.includes("video rendering in background") ||
+            p.includes("video ad ready") ||
+            p.includes("plan reach-out") ||
+            p.includes("distribution complete")
+          ) {
+            return prev;
+          }
+          return message;
+        });
+      };
+
       switch (event.type) {
         case "system":
         case "tester":
         case "iteration":
         case "task_assigned":
-          if (event.message) setStatusMessage(event.message);
+          setStatusIfDistributing(event.message);
           break;
         case "agent_created":
         case "vm_spawned":
-          if (event.message) setStatusMessage(event.message);
+          setStatusIfDistributing(event.message);
           break;
         case "agent_active":
           if (event.role) setRoleActive(event.role, true);
@@ -209,7 +241,7 @@ export default function ForgePage() {
           if (event.role) setRoleActive(event.role, false);
           break;
         case "subagent_output":
-          if (event.content) setStatusMessage(event.content.slice(0, 80));
+          setStatusIfDistributing(event.content?.slice(0, 80));
           if (event.role) setRoleActive(event.role, true);
           break;
         case "scope_ready":
@@ -237,8 +269,7 @@ export default function ForgePage() {
             if (event.variant.verdict === "pass") {
               // Unlock reach-out gate immediately; Producer runs in background
               unlockDistribute(
-                event.message ||
-                  "Gate cleared · video rendering in background"
+                `Gate cleared · Variant ${event.variant.label} · video rendering in background`
               );
               void produceVideo(event.variant, briefRef.current);
             } else if (event.message) {
@@ -248,7 +279,7 @@ export default function ForgePage() {
           break;
         case "reachout_ready":
           if (event.reachout) setReachout(event.reachout);
-          if (event.message) setStatusMessage(event.message);
+          // Cadence detail lives on ReachoutPanel — keep gate-cleared status
           break;
         case "complete":
           if (event.variants) {

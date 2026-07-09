@@ -73,6 +73,7 @@ export function ForgeCanvas({
   onReset,
 }: ForgeCanvasProps) {
   const [trustOpen, setTrustOpen] = useState(false);
+  const [isHolding, setIsHolding] = useState(false);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartX = useRef<number | null>(null);
   const didSwipe = useRef(false);
@@ -96,12 +97,17 @@ export function ForgeCanvas({
       clearTimeout(holdTimer.current);
       holdTimer.current = null;
     }
+    setIsHolding(false);
   }, []);
 
   const startHold = useCallback(() => {
     didSwipe.current = false;
+    setIsHolding(true);
     holdTimer.current = setTimeout(() => {
-      if (!didSwipe.current) setTrustOpen(true);
+      if (!didSwipe.current) {
+        setIsHolding(false);
+        setTrustOpen(true);
+      }
     }, 500);
   }, []);
 
@@ -374,9 +380,18 @@ export function ForgeCanvas({
             <motion.div
               key={variant.id}
               initial={{ opacity: 0, scale: 0.96, x: 36 }}
-              animate={{ opacity: 1, scale: 1, x: 0 }}
+              animate={{
+                opacity: 1,
+                scale: isHolding ? 0.97 : 1,
+                x: 0,
+              }}
               exit={{ opacity: 0, scale: 1.03, x: -36 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className={cn(
+                "rounded-[1.85rem] transition-[box-shadow] duration-200",
+                isHolding &&
+                  "shadow-[0_0_0_2px_rgba(232,184,74,0.45),0_0_28px_rgba(232,184,74,0.2)]"
+              )}
             >
               <AdCreative
                 variant={variant}
