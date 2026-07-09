@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -19,6 +20,15 @@ const fadeUp = {
 };
 
 export function LandingHero() {
+  const [showStickyCta, setShowStickyCta] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowStickyCta(window.scrollY > 420);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <section className="relative flex min-h-dvh flex-col items-center justify-center px-5 py-20">
       <motion.div
@@ -86,6 +96,18 @@ export function LandingHero() {
           <span className="text-pass/80">Launch</span>
         </motion.div>
       </motion.div>
+
+      {showStickyCta && (
+        <div className="landing-sticky-cta fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.06] bg-[#0c0c10]/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md sm:hidden">
+          <Link
+            href="/forge"
+            className="relative flex w-full items-center justify-center overflow-hidden rounded-2xl bg-amber px-5 py-3.5 text-[15px] font-semibold text-[#1a1408]"
+          >
+            <span className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-60" />
+            <span className="relative">Run GTM Factory</span>
+          </Link>
+        </div>
+      )}
     </section>
   );
 }

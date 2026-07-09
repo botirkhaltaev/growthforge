@@ -421,9 +421,11 @@ export function ForgeCanvas({
         )}
 
         <p className="text-center text-[10px] text-muted/45">
-          {forging
-            ? "Hold for gate · Kill switch inside"
-            : "Swipe to compare · Hold for launch gate"}
+          {deployed
+            ? "Factory complete · Run another loop anytime"
+            : forging
+              ? "Hold for gate · Kill switch inside"
+              : "Swipe to compare · Hold for launch gate"}
         </p>
       </footer>
     </div>

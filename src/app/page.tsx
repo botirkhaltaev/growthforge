@@ -81,7 +81,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="px-5 pb-24 pt-8">
+      <section className="px-5 pb-28 pt-8 sm:pb-24">
         <div className="mx-auto max-w-2xl space-y-8 text-center">
           <div className="space-y-4">
             <h2 className="font-display text-balance text-[2rem] leading-[1.12] tracking-tight sm:text-3xl">

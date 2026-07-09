@@ -89,6 +89,13 @@ export function BriefScreen({
             id="brief"
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                e.preventDefault();
+                if (!brief.trim() || loading) return;
+                onSubmit(brief.trim());
+              }
+            }}
             rows={3}
             className="w-full resize-none rounded-2xl border border-white/[0.07] bg-surface/80 px-5 py-4 text-[15px] leading-relaxed text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition placeholder:text-muted/50 focus:border-amber/35 focus:bg-surface-elevated"
             placeholder={PLACEHOLDER}
@@ -147,6 +154,8 @@ export function BriefScreen({
 
         <p className="text-center text-[11px] leading-relaxed text-muted/55">
           create → test → iterate → launch · gate ≥ 3% CTR
+          <span className="mx-1.5 text-white/20">·</span>
+          ⌘↵ to run
         </p>
       </motion.div>
     </div>
