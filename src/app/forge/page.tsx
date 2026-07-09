@@ -171,10 +171,12 @@ export default function ForgePage() {
         console.error("[growthforge] produceVideo", err);
         patchVariant(variant.id, { videoStatus: "failed" });
         setRoleActive("producer", false);
+        const detail =
+          err instanceof Error ? err.message : "using static creative";
         setStatusMessage(
-          err instanceof Error
-            ? `Video unavailable — ${err.message}`
-            : "Video unavailable — using static creative"
+          detail.toLowerCase().includes("fal_key")
+            ? "Distribution gate open · continuing with static creative"
+            : `Video unavailable — ${detail}`
         );
       }
     },
@@ -263,7 +265,19 @@ export default function ForgePage() {
           }
           if (event.reachout) setReachout(event.reachout);
           if (event.confidence) setConfidence(event.confidence);
-          if (event.message) setStatusMessage(event.message);
+          if (event.message) {
+            setStatusMessage((prev) => {
+              const p = prev.toLowerCase();
+              if (
+                p.includes("continuing with static") ||
+                p.includes("video unavailable") ||
+                p.includes("video ad ready")
+              ) {
+                return prev;
+              }
+              return event.message!;
+            });
+          }
           setActivity((prev) => ({
             ...IDLE_ACTIVITY,
             producer: prev.producer,

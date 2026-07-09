@@ -312,7 +312,7 @@ export async function* demoDistributeStream(
   yield {
     type: "tester",
     role: "tester",
-    message: "Test · A/B simulation on Variant A…",
+    message: "Gate · scoring Variant A…",
   };
   await sleep(650);
   yield {
@@ -325,7 +325,7 @@ export async function* demoDistributeStream(
   yield {
     type: "iteration",
     iteration: 1,
-    message: "Re-dispatch · Copywriter revising hooks…",
+    message: "Redistributing · Copywriter revising hooks…",
     role: "copywriter",
   };
   yield { type: "agent_active", role: "copywriter" };
@@ -341,7 +341,7 @@ export async function* demoDistributeStream(
   yield {
     type: "tester",
     role: "tester",
-    message: "Test · Re-scoring Variant B…",
+    message: "Gate · re-scoring Variant B…",
   };
   await sleep(650);
   yield {
@@ -354,7 +354,7 @@ export async function* demoDistributeStream(
   yield {
     type: "iteration",
     iteration: 2,
-    message: "Re-dispatch · Designer + Copywriter…",
+    message: "Redistributing · Designer + Copywriter…",
     role: "designer",
   };
   yield { type: "agent_active", role: "designer" };
@@ -378,7 +378,7 @@ export async function* demoDistributeStream(
   yield {
     type: "tester",
     role: "tester",
-    message: "Test · Final A/B simulation on Variant C…",
+    message: "Gate · final scoring on Variant C…",
   };
   await sleep(750);
   yield {

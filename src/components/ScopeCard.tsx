@@ -25,10 +25,21 @@ export function ScopeCard({
       <header className="flex items-center justify-between gap-3 pb-3">
         <button
           type="button"
-          onClick={onReset}
+          onClick={() => {
+            if (!onReset) return;
+            if (
+              !window.confirm(
+                "Start a new brief? Current scope will be cleared."
+              )
+            ) {
+              return;
+            }
+            onReset();
+          }}
           className="text-[11px] font-medium uppercase tracking-[0.22em] text-amber/75 transition hover:text-amber-bright"
+          title="Start a new brief"
         >
-          GTM Factory
+          New brief
         </button>
         <Link
           href="/"
@@ -41,8 +52,8 @@ export function ScopeCard({
       <div className="px-1 pb-3">
         <FactoryLoop
           compact
-          active="scope"
-          completedThrough={null}
+          active="distribute"
+          completedThrough="scope"
           showCaption={false}
         />
       </div>
@@ -147,7 +158,7 @@ export function ScopeCard({
         </button>
 
         <p className="text-center text-[11px] text-muted/50">
-          Work will be assigned across copy, design, audience, and gate agents
+          Work will be assigned across copy, design, audience, gate, and video
         </p>
       </motion.div>
     </div>
