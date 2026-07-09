@@ -74,6 +74,7 @@ export function BriefScreen({
 
         <FactoryLoop
           completedThrough={null}
+          active={loading ? "scope" : null}
           showCaption
           className="opacity-70"
         />

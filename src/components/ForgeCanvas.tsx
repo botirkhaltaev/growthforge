@@ -179,7 +179,13 @@ export function ForgeCanvas({
       <div className="px-5 pb-0.5 pt-1">
         <FactoryLoop
           compact
-          active={distributing && !hasPass ? loopStep : null}
+          active={
+            distributing && !hasPass
+              ? loopStep
+              : ready && hasPass
+                ? "reachout"
+                : null
+          }
           completedThrough={
             hasPass
               ? "distribute"

@@ -92,11 +92,11 @@ export function ScopeCard({
               <p className="font-mono text-[10px] uppercase tracking-widest text-muted/55">
                 Buying signals
               </p>
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 {scope.signals.map((signal) => (
                   <span
                     key={signal}
-                    className="rounded-full border border-amber/25 bg-amber/10 px-2.5 py-1 text-[11px] text-amber-bright"
+                    className="rounded-full border border-amber/25 bg-amber/10 px-2 py-1 text-[10px] leading-snug text-amber-bright sm:text-[11px]"
                   >
                     {signal}
                   </span>
