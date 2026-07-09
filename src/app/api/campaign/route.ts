@@ -38,10 +38,11 @@ export async function POST(req: Request) {
     async start(controller) {
       try {
         if (!demoMode && stage === "distribute") {
-          const generator = (await import("@/lib/cursor-agents")).realCampaignStream(
-            brief
-          );
+          const generator = (
+            await import("@/lib/cursor-agents")
+          ).realCampaignStream(brief, req.signal);
           for await (const event of generator) {
+            if (req.signal.aborted) break;
             controller.enqueue(encodeSSE(event));
           }
           return;
@@ -50,6 +51,7 @@ export async function POST(req: Request) {
         if (!demoMode && stage === "scope") {
           // Real SDK path still uses theatrical scope for the pause UX
           for await (const event of demoScopeStream(brief)) {
+            if (req.signal.aborted) break;
             controller.enqueue(encodeSSE(event));
           }
           return;
@@ -61,18 +63,24 @@ export async function POST(req: Request) {
             : demoScopeStream(brief);
 
         for await (const event of generator) {
+          if (req.signal.aborted) break;
           controller.enqueue(encodeSSE(event));
         }
       } catch (err) {
-        controller.enqueue(
-          encodeSSE({
-            type: "error",
-            message: err instanceof Error ? err.message : "Stream failed",
-          })
-        );
+        if (!req.signal.aborted) {
+          controller.enqueue(
+            encodeSSE({
+              type: "error",
+              message: err instanceof Error ? err.message : "Stream failed",
+            })
+          );
+        }
       } finally {
         controller.close();
       }
+    },
+    cancel() {
+      // Client disconnected — AbortSignal on req cancels agent runs.
     },
   });
 
