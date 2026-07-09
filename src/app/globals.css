@@ -1,23 +1,34 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0f;
-  --foreground: #f5f5f4;
-  --amber: #fbbf24;
-  --amber-dim: rgba(251, 191, 36, 0.3);
-  --muted: #a8a29e;
-  --surface: #14141a;
-  --border: rgba(255, 255, 255, 0.08);
+  --background: #07070b;
+  --foreground: #f4f1ea;
+  --amber: #e8b84a;
+  --amber-bright: #f5d78e;
+  --amber-dim: rgba(232, 184, 74, 0.28);
+  --muted: #8a857c;
+  --surface: #121218;
+  --surface-elevated: #1a1a22;
+  --border: rgba(244, 241, 234, 0.08);
+  --fail: #f07178;
+  --close: #e8b84a;
+  --pass: #7dcea0;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-amber: var(--amber);
+  --color-amber-bright: var(--amber-bright);
   --color-muted: var(--muted);
   --color-surface: var(--surface);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-fail: var(--fail);
+  --color-close: var(--close);
+  --color-pass: var(--pass);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
 }
 
 * {
@@ -32,34 +43,46 @@ body {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
-/* Ambient agent glow on headline */
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+  font-optical-sizing: auto;
+}
+
+/* Soft radial atmosphere — forge heat, not flat black */
+.forge-atmosphere {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(232, 184, 74, 0.09), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(120, 80, 40, 0.06), transparent 50%),
+    var(--background);
+}
+
 @keyframes amber-pulse {
   0%,
   100% {
     text-shadow: 0 0 0 transparent;
   }
   50% {
-    text-shadow: 0 0 24px var(--amber-dim), 0 0 48px rgba(251, 191, 36, 0.15);
+    text-shadow: 0 0 20px var(--amber-dim), 0 0 40px rgba(232, 184, 74, 0.12);
   }
 }
 
 .glow-amber {
   animation: amber-pulse 1.8s ease-in-out infinite;
-  color: #fde68a;
+  color: var(--amber-bright);
 }
 
 @keyframes shimmer-hue {
   0%,
   100% {
-    filter: hue-rotate(0deg) brightness(1);
+    filter: brightness(1) saturate(1);
   }
   50% {
-    filter: hue-rotate(8deg) brightness(1.08);
+    filter: brightness(1.12) saturate(1.15);
   }
 }
 
@@ -70,12 +93,12 @@ body {
 @keyframes pulse-dot {
   0%,
   100% {
-    opacity: 0.4;
+    opacity: 0.45;
     transform: scale(1);
   }
   50% {
     opacity: 1;
-    transform: scale(1.15);
+    transform: scale(1.12);
   }
 }
 
@@ -86,7 +109,7 @@ body {
 @keyframes blur-sharpen {
   0% {
     filter: blur(4px);
-    opacity: 0.5;
+    opacity: 0.45;
   }
   100% {
     filter: blur(0);
@@ -98,15 +121,47 @@ body {
   animation: blur-sharpen 0.45s ease-out;
 }
 
-/* Hide scrollbars on mobile canvas */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+@keyframes skeleton-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.55;
+  }
 }
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+.skeleton-breathe {
+  animation: skeleton-breathe 1.6s ease-in-out infinite;
+}
+
+@keyframes forge-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.forge-ring {
+  animation: forge-spin 1.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow-amber,
+  .shimmer-active,
+  .pulse-platform,
+  .metric-refresh,
+  .skeleton-breathe,
+  .forge-ring {
+    animation: none !important;
+  }
 }
 
 ::selection {
-  background: rgba(251, 191, 36, 0.35);
+  background: rgba(232, 184, 74, 0.35);
+}
+
+textarea:focus-visible,
+button:focus-visible {
+  outline: 2px solid rgba(232, 184, 74, 0.55);
+  outline-offset: 2px;
 }

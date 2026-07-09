@@ -15,23 +15,29 @@ export function BriefScreen({ onSubmit, loading }: BriefScreenProps) {
   const [brief, setBrief] = useState(PLACEHOLDER);
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center px-5 py-12">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center px-5 py-16">
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md space-y-8"
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-lg space-y-10"
       >
-        <div className="space-y-3 text-center">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-amber-400/80">
+        <div className="space-y-5 text-center">
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.15 }}
+            className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber/80"
+          >
             Growth Forge
-          </p>
-          <h1 className="text-balance text-3xl font-semibold tracking-tight text-stone-100 sm:text-4xl">
-            What are you selling?
+          </motion.p>
+          <h1 className="font-display text-balance text-[2.75rem] leading-[1.08] tracking-tight text-foreground sm:text-5xl">
+            What are you{" "}
+            <em className="not-italic text-amber-bright">selling?</em>
           </h1>
-          <p className="text-sm text-stone-400">
-            Four Cursor agents will forge, test, and iterate until the creative
-            wins.
+          <p className="mx-auto max-w-sm text-[15px] leading-relaxed text-muted">
+            Four agents write, design, target, and score — then iterate until
+            the creative clears the bar.
           </p>
         </div>
 
@@ -41,13 +47,17 @@ export function BriefScreen({ onSubmit, loading }: BriefScreenProps) {
             if (!brief.trim() || loading) return;
             onSubmit(brief.trim());
           }}
-          className="space-y-4"
+          className="space-y-3"
         >
+          <label className="sr-only" htmlFor="brief">
+            Product brief
+          </label>
           <textarea
+            id="brief"
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
-            rows={4}
-            className="w-full resize-none rounded-2xl border border-white/10 bg-surface px-4 py-3.5 text-base text-stone-100 outline-none ring-amber-400/0 transition placeholder:text-stone-600 focus:border-amber-400/40 focus:ring-2 focus:ring-amber-400/20"
+            rows={3}
+            className="w-full resize-none rounded-2xl border border-white/[0.07] bg-surface/80 px-5 py-4 text-[15px] leading-relaxed text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition placeholder:text-muted/50 focus:border-amber/35 focus:bg-surface-elevated"
             placeholder={PLACEHOLDER}
             disabled={loading}
           />
@@ -55,22 +65,24 @@ export function BriefScreen({ onSubmit, loading }: BriefScreenProps) {
           <button
             type="submit"
             disabled={loading || !brief.trim()}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-400 px-4 py-3.5 text-base font-semibold text-stone-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
+            className="group relative flex w-full items-center justify-center overflow-hidden rounded-2xl bg-amber px-4 py-3.5 text-[15px] font-semibold text-[#1a1408] transition hover:bg-amber-bright disabled:cursor-not-allowed disabled:opacity-45"
           >
-            {loading ? (
-              <>
-                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-stone-950/30 border-t-stone-950" />
-                Forging…
-              </>
-            ) : (
-              "Forge Campaign"
-            )}
+            <span className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-60" />
+            <span className="relative">
+              {loading ? "Forging…" : "Forge Campaign"}
+            </span>
           </button>
         </form>
 
-        <p className="text-center text-[11px] text-stone-600">
-          Built with @cursor/sdk · generative UI · one canvas
-        </p>
+        <div className="flex items-center justify-center gap-6 text-[11px] text-muted/60">
+          <span>Copy</span>
+          <span className="h-px w-4 bg-white/10" />
+          <span>Design</span>
+          <span className="h-px w-4 bg-white/10" />
+          <span>Target</span>
+          <span className="h-px w-4 bg-white/10" />
+          <span>Score</span>
+        </div>
       </motion.div>
     </div>
   );
