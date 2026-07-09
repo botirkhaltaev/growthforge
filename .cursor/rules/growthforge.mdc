@@ -1,0 +1,18 @@
+---
+description: Growth Forge hackathon project conventions
+globs:
+  - "**/*"
+---
+
+# Growth Forge — Generative Marketing Studio
+
+- Next.js App Router + React + TypeScript + Tailwind + Framer Motion
+- `@cursor/sdk` for real agent orchestration (parallel agents, not fictional subagent delegation)
+- Generative UI: the ad creative IS the interface (~80% of screen)
+- Dark theme: `#0A0A0F` background, amber glows, minimal chrome
+- Ambient agent activity: CSS text-shadow pulse, hue-rotate shimmer — NOT progress bars or agent cards
+- Framer Motion: AnimatePresence for version morph, layout animations
+- Mobile-first: swipe for version comparison, hold for trust overlay
+- DEMO_MODE=true on Vercel (theatrical SSE). DEMO_MODE=false locally for real SDK
+- One primary action: Approve & Deploy
+- Keep UI calm — output-first, chrome-last

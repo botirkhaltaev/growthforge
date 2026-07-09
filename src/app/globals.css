@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a0f;
+  --foreground: #f5f5f4;
+  --amber: #fbbf24;
+  --amber-dim: rgba(251, 191, 36, 0.3);
+  --muted: #a8a29e;
+  --surface: #14141a;
+  --border: rgba(255, 255, 255, 0.08);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-amber: var(--amber);
+  --color-muted: var(--muted);
+  --color-surface: var(--surface);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Ambient agent glow on headline */
+@keyframes amber-pulse {
+  0%,
+  100% {
+    text-shadow: 0 0 0 transparent;
+  }
+  50% {
+    text-shadow: 0 0 24px var(--amber-dim), 0 0 48px rgba(251, 191, 36, 0.15);
+  }
+}
+
+.glow-amber {
+  animation: amber-pulse 1.8s ease-in-out infinite;
+  color: #fde68a;
+}
+
+@keyframes shimmer-hue {
+  0%,
+  100% {
+    filter: hue-rotate(0deg) brightness(1);
+  }
+  50% {
+    filter: hue-rotate(8deg) brightness(1.08);
+  }
+}
+
+.shimmer-active {
+  animation: shimmer-hue 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+.pulse-platform {
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+@keyframes blur-sharpen {
+  0% {
+    filter: blur(4px);
+    opacity: 0.5;
+  }
+  100% {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+.metric-refresh {
+  animation: blur-sharpen 0.45s ease-out;
+}
+
+/* Hide scrollbars on mobile canvas */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+::selection {
+  background: rgba(251, 191, 36, 0.35);
+}
