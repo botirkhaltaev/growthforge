@@ -72,20 +72,20 @@ export async function* demoCampaignStream(
 
   yield {
     type: "system",
-    message: `Factory loop starting · ${product.slice(0, 64)}…`,
+    message: `GTM factory starting · ${product.slice(0, 64)}…`,
   };
   await sleep(400);
 
   yield {
     type: "agent_created",
     role: "foreman",
-    message: "Foreman online · create → test → fail → fix → pass",
+    message: "Foreman online · create → test → iterate → launch",
   };
   await sleep(300);
 
   yield {
     type: "system",
-    message: "Spawning 4 specialist agents on parallel runtimes…",
+    message: "Spawning 4 GTM stations on parallel runtimes…",
   };
   await sleep(200);
 
@@ -161,7 +161,7 @@ export async function* demoCampaignStream(
   yield {
     type: "iteration",
     iteration: 1,
-    message: "Fix · Re-dispatching Copywriter…",
+    message: "Iterate · Re-dispatching Copywriter…",
     role: "copywriter",
   };
   yield { type: "agent_active", role: "copywriter" };
@@ -190,7 +190,7 @@ export async function* demoCampaignStream(
   yield {
     type: "iteration",
     iteration: 2,
-    message: "Fix · Re-dispatching Designer + Copywriter…",
+    message: "Iterate · Re-dispatching Designer + Copywriter…",
     role: "designer",
   };
   yield { type: "agent_active", role: "designer" };
@@ -228,6 +228,6 @@ export async function* demoCampaignStream(
     type: "complete",
     variants: DEMO_VARIANTS,
     confidence: 94,
-    message: "Loop complete · Variant C passed 3% CTR. Ready to deploy.",
+    message: "Launch gate open · Variant C cleared 3% CTR. Ready to launch.",
   };
 }

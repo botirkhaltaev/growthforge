@@ -51,13 +51,13 @@ export function TrustOverlay({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-amber/80">
-                  Trust
+                  Launch gate
                 </p>
                 <h2
                   id="trust-title"
                   className="mt-1 font-display text-xl text-foreground"
                 >
-                  Factory oversight
+                  GTM oversight
                 </h2>
               </div>
               <button
@@ -73,16 +73,24 @@ export function TrustOverlay({
             <FactoryLoop
               className="mt-4"
               compact
-              active={forging ? "fix" : null}
-              completedThrough={hasPass ? "pass" : variants.length > 0 ? "fail" : null}
+              active={forging ? "iterate" : null}
+              completedThrough={
+                hasPass ? "launch" : variants.length > 0 ? "iterate" : null
+              }
             />
 
             <dl className="mt-5 space-y-3 text-sm">
-              <Row label="Agents" value={`${agentCount} specialists · parallel`} />
-              <Row label="Iterations" value={`${iterations} · write→test→fix`} />
-              <Row label="Confidence" value={`${confidence}%`} accent />
               <Row
-                label="Winner"
+                label="Stations"
+                value={`${agentCount} specialists · parallel`}
+              />
+              <Row
+                label="Iterations"
+                value={`${iterations} · create→test→iterate`}
+              />
+              <Row label="Gate confidence" value={`${confidence}%`} accent />
+              <Row
+                label="Launch candidate"
                 value={
                   winner
                     ? `Variant ${winner.label} · ${winner.ctr}% CTR`
@@ -127,7 +135,7 @@ export function TrustOverlay({
                 onClick={onKill}
                 className="mt-5 w-full rounded-xl border border-fail/35 bg-fail/10 py-2.5 text-sm font-semibold text-fail transition hover:bg-fail/20"
               >
-                Kill switch — halt agents
+                Kill switch — halt factory
               </button>
             ) : (
               <button

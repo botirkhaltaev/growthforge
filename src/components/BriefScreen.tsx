@@ -50,15 +50,15 @@ export function BriefScreen({
             transition={{ delay: 0.1 }}
             className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber/80"
           >
-            Growth Forge
+            Growth Forge · GTM factory
           </motion.p>
           <h1 className="font-display text-balance text-[2.75rem] leading-[1.08] tracking-tight text-foreground sm:text-5xl">
             What are you{" "}
-            <em className="not-italic text-amber-bright">selling?</em>
+            <em className="not-italic text-amber-bright">launching?</em>
           </h1>
           <p className="mx-auto max-w-sm text-[15px] leading-relaxed text-muted">
-            Software factory for ads — create, test, fail, fix, pass until the
-            creative clears the bar.
+            Brief in. Agents create, test, and iterate GTM creative until it
+            clears the gate — then you launch.
           </p>
         </div>
 
@@ -117,10 +117,10 @@ export function BriefScreen({
               {loading ? (
                 <>
                   <span className="forge-ring inline-block h-3.5 w-3.5 rounded-full border-2 border-[#1a1408]/30 border-t-[#1a1408]" />
-                  Forging…
+                  Running factory…
                 </>
               ) : (
-                "Forge Campaign"
+                "Run GTM Factory"
               )}
             </span>
           </button>
@@ -136,7 +136,7 @@ export function BriefScreen({
         </form>
 
         <p className="text-center text-[11px] leading-relaxed text-muted/55">
-          write → test → fail → fix → pass · applied to growth
+          create → test → iterate → launch
         </p>
       </motion.div>
     </div>

@@ -103,7 +103,7 @@ export default function ForgePage() {
     setActiveIndex(0);
     setActivity(IDLE_ACTIVITY);
     setConfidence(0);
-    setStatusMessage("Factory loop · connecting agents…");
+    setStatusMessage("GTM factory · connecting stations…");
 
     let sawComplete = false;
     let sawVariant = false;
@@ -199,6 +199,7 @@ export default function ForgePage() {
     const briefError =
       statusMessage &&
       !statusMessage.toLowerCase().includes("connecting") &&
+      !statusMessage.toLowerCase().includes("gtm factory") &&
       !statusMessage.toLowerCase().includes("factory loop")
         ? statusMessage
         : undefined;

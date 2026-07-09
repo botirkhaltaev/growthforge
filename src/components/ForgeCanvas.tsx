@@ -125,10 +125,10 @@ export function ForgeCanvas({
 
   const ctaLabel = (() => {
     if (deployed) return "Live on Meta · Facebook + Instagram";
-    if (forging) return "Agents iterating…";
-    if (variant?.verdict === "pass") return "Approve & Deploy";
+    if (forging) return "Factory iterating…";
+    if (variant?.verdict === "pass") return "Approve & Launch";
     if (hasPass) return `Jump to winner · Variant ${passVariant?.label}`;
-    return "Waiting for a passing variant…";
+    return "Waiting for a launch-ready variant…";
   })();
 
   const canJumpToWinner =
@@ -153,30 +153,32 @@ export function ForgeCanvas({
           className="text-[11px] font-medium uppercase tracking-[0.22em] text-amber/75 transition hover:text-amber-bright"
           title="New brief"
         >
-          Growth Forge
+          GTM Factory
         </button>
         <button
           type="button"
           onClick={() => setTrustOpen(true)}
           className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 font-mono text-[10px] tracking-wide text-muted transition hover:border-amber/30 hover:text-amber-bright"
         >
-          Trust{confidence > 0 ? ` · ${confidence}%` : ""}
+          Gate{confidence > 0 ? ` · ${confidence}%` : ""}
         </button>
       </header>
 
-      {/* Factory loop — thesis made visible, chrome kept thin */}
+      {/* GTM factory stations */}
       <div className="px-5 pb-0.5 pt-1">
         <FactoryLoop
           compact
           active={forging && !hasPass ? loopStep : null}
           completedThrough={
-            deployed || hasPass
-              ? "pass"
-              : variants.some(
-                  (v) => v.verdict === "fail" || v.verdict === "close"
-                )
-                ? "fail"
-                : null
+            deployed
+              ? "launch"
+              : hasPass
+                ? "launch"
+                : variants.some(
+                    (v) => v.verdict === "fail" || v.verdict === "close"
+                  )
+                  ? "iterate"
+                  : null
           }
         />
       </div>
@@ -297,7 +299,7 @@ export function ForgeCanvas({
             >
               <div className="rounded-full border border-pass/35 bg-pass/15 px-4 py-2 text-center shadow-lg backdrop-blur-md">
                 <p className="font-mono text-[11px] font-medium text-pass">
-                  Deployed · factory loop complete
+                  Launched · GTM factory complete
                 </p>
               </div>
             </motion.div>
@@ -380,7 +382,7 @@ export function ForgeCanvas({
               onClick={onReset}
               className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.03] py-3 text-[14px] font-medium text-foreground/80 transition hover:border-amber/30 hover:text-amber-bright"
             >
-              Forge another campaign
+              Run another GTM loop
             </button>
           </div>
         ) : (
@@ -401,8 +403,8 @@ export function ForgeCanvas({
 
         <p className="text-center text-[10px] text-muted/45">
           {forging
-            ? "Hold for trust · Kill switch inside"
-            : "Swipe to compare · Hold for trust"}
+            ? "Hold for gate · Kill switch inside"
+            : "Swipe to compare · Hold for launch gate"}
         </p>
       </footer>
     </div>

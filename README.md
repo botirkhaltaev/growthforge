@@ -1,14 +1,14 @@
 # Growth Forge
 
-Multi-agent marketing studio for the Cursor iOS London Hackathon.
+GTM factory for the Cursor iOS London Hackathon.
 
-**Thesis:** Apply the software-engineering feedback loop (`write → test → fail → fix → pass`) to growth marketing (`create ad → A/B test → CTR score → revise → pass`) — with the generated creative as the only interface.
+**Thesis:** Apply a go-to-market stage-gate (`create → test → iterate → launch`) to growth creative — with the generated ad as the only interface.
 
 ## Stack
 
 - Next.js App Router + TypeScript + Tailwind + Framer Motion
 - `@cursor/sdk` — parallel Cursor agents (Copywriter, Designer, Media Buyer, Analyst)
-- Generative UI — ambient agent glows, swipe-to-morph variants, hold-for-trust
+- Generative UI — ambient agent glows, swipe-to-morph variants, hold-for-launch-gate
 
 ## Modes
 
@@ -30,26 +30,26 @@ npm run dev
 
 | Path | What |
 |------|------|
-| `/` | Marketing landing — thesis, loop, A/B/C showcase |
-| `/forge` | Interactive studio — brief → forge → deploy |
+| `/` | Marketing landing — GTM thesis, factory stations, A/B/C showcase |
+| `/forge` | Interactive GTM factory — brief → create/test/iterate → launch |
 
 ## Demo flow
 
-1. From `/` → **Forge a campaign** (or open `/forge`)
-2. Pick an example chip (or edit the brief) → **Forge Campaign**
-3. Watch the factory loop: **Create → Test → Fail → Fix → Pass**
+1. From `/` → **Run GTM Factory** (or open `/forge`)
+2. Pick an example chip (or edit the brief) → **Run GTM Factory**
+3. Watch stations: **Create → Test → Iterate → Launch**
 4. Ambient agent activity on the creative (amber glow, shimmer, platform pulse)
 5. Swipe / ← → between variants A (1.2% FAIL) → B (2.8% CLOSE) → C (4.1% PASS)
-6. Hold or press **T** for trust overlay · **Approve & Deploy**
-7. **Forge another campaign** to loop again
+6. Hold or press **T** for launch gate · **Approve & Launch**
+7. **Run another GTM loop** to start again
 
 ### Keyboard
 
 | Key | Action |
 |-----|--------|
 | ← / → | Compare variants |
-| T | Trust / oversight |
-| Esc | Close trust · or new brief |
+| T | Launch gate / oversight |
+| Esc | Close gate · or new brief |
 
 ## Env
 

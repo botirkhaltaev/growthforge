@@ -2,14 +2,14 @@
 
 import { cn } from "@/lib/utils";
 
-export type LoopStep = "create" | "test" | "fail" | "fix" | "pass";
+/** GTM factory stations — create assets, test, iterate, launch */
+export type LoopStep = "create" | "test" | "iterate" | "launch";
 
 const STEPS: { id: LoopStep; label: string }[] = [
   { id: "create", label: "Create" },
   { id: "test", label: "Test" },
-  { id: "fail", label: "Fail" },
-  { id: "fix", label: "Fix" },
-  { id: "pass", label: "Pass" },
+  { id: "iterate", label: "Iterate" },
+  { id: "launch", label: "Launch" },
 ];
 
 interface FactoryLoopProps {
@@ -19,7 +19,7 @@ interface FactoryLoopProps {
   className?: string;
 }
 
-const ORDER: LoopStep[] = ["create", "test", "fail", "fix", "pass"];
+const ORDER: LoopStep[] = ["create", "test", "iterate", "launch"];
 
 function rank(step: LoopStep | null | undefined) {
   if (!step) return -1;
@@ -42,13 +42,14 @@ export function FactoryLoop({
         compact ? "gap-1" : "gap-1.5",
         className
       )}
-      aria-label="Software factory loop"
+      aria-label="GTM factory loop"
     >
       {STEPS.map((step, i) => {
         const stepRank = i;
         const isActive = active === step.id;
-        const isFinalPass = completedThrough === "pass" && step.id === "pass";
-        const isDone = stepRank <= doneRank && !isActive && !isFinalPass;
+        const isFinalLaunch =
+          completedThrough === "launch" && step.id === "launch";
+        const isDone = stepRank <= doneRank && !isActive && !isFinalLaunch;
         const isUpcoming = stepRank > Math.max(doneRank, activeRank);
 
         return (
@@ -57,7 +58,7 @@ export function FactoryLoop({
               <span
                 className={cn(
                   "h-px w-2 sm:w-3",
-                  isDone || isActive || isFinalPass
+                  isDone || isActive || isFinalLaunch
                     ? "bg-amber/40"
                     : "bg-white/10"
                 )}
@@ -71,7 +72,7 @@ export function FactoryLoop({
                   : "px-2.5 py-1 text-[10px]",
                 isActive &&
                   "bg-amber/20 text-amber-bright ring-1 ring-amber/40 loop-pulse",
-                isFinalPass &&
+                isFinalLaunch &&
                   "bg-pass/20 font-medium text-pass ring-1 ring-pass/45",
                 isDone && "bg-white/[0.07] text-foreground/55",
                 isUpcoming && "text-muted/35"
@@ -86,7 +87,7 @@ export function FactoryLoop({
   );
 }
 
-/** Map campaign status text / phase into a loop step for ambient UI */
+/** Map campaign status / phase into a GTM factory station */
 export function inferLoopStep(opts: {
   forging: boolean;
   deployed: boolean;
@@ -95,17 +96,37 @@ export function inferLoopStep(opts: {
   variantCount: number;
 }): LoopStep | null {
   const { forging, deployed, statusMessage, hasPass, variantCount } = opts;
-  if (deployed || hasPass) return "pass";
+  if (deployed) return "launch";
+  if (hasPass && !forging) return "launch";
   if (!forging) return null;
 
   const msg = statusMessage.toLowerCase();
-  if (msg.includes("re-dispatch") || msg.includes("revised") || msg.includes("swapped") || msg.includes("final:")) {
-    return "fix";
+  if (
+    msg.includes("re-dispatch") ||
+    msg.includes("revised") ||
+    msg.includes("swapped") ||
+    msg.includes("iterate") ||
+    msg.includes("fix ·") ||
+    msg.includes("final:")
+  ) {
+    return "iterate";
   }
-  if (msg.includes("fail") || msg.includes("below benchmark") || msg.includes("close but")) {
-    return "fail";
+  if (
+    msg.includes("fail") ||
+    msg.includes("below") ||
+    msg.includes("close but") ||
+    msg.includes("under bar")
+  ) {
+    return "iterate";
   }
-  if (msg.includes("simulation") || msg.includes("re-testing") || msg.includes("scoring") || msg.includes("a/b")) {
+  if (
+    msg.includes("simulation") ||
+    msg.includes("re-scoring") ||
+    msg.includes("re-testing") ||
+    msg.includes("scoring") ||
+    msg.includes("a/b") ||
+    msg.includes("test ·")
+  ) {
     return "test";
   }
   if (variantCount === 0) return "create";

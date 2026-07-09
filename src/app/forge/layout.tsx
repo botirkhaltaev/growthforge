@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Forge Campaign — Growth Forge",
+  title: "GTM Factory — Growth Forge",
   description:
-    "Enter a product brief and watch four Cursor agents forge, test, and iterate ad creative until it wins.",
+    "Enter a product brief and watch four Cursor agents create, test, and iterate GTM creative until it clears the launch gate.",
 };
 
 export default function ForgeLayout({

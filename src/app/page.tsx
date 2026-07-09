@@ -5,16 +5,15 @@ import { LandingShowcase } from "@/components/LandingShowcase";
 const LOOP_STEPS = [
   { label: "Create", color: "text-foreground/70" },
   { label: "Test", color: "text-foreground/70" },
-  { label: "Fail", color: "text-close" },
-  { label: "Fix", color: "text-foreground/70" },
-  { label: "Pass", color: "text-pass" },
+  { label: "Iterate", color: "text-close" },
+  { label: "Launch", color: "text-pass" },
 ] as const;
 
 const AGENTS = [
-  { role: "Copywriter", task: "Headlines & hooks" },
-  { role: "Designer", task: "Visual direction" },
-  { role: "Media Buyer", task: "Platform targeting" },
-  { role: "Analyst", task: "CTR & ROAS scoring" },
+  { role: "Copywriter", task: "Messaging & hooks" },
+  { role: "Designer", task: "Creative direction" },
+  { role: "Media Buyer", task: "Channel targeting" },
+  { role: "Analyst", task: "CTR & ROAS gates" },
 ] as const;
 
 export default function LandingPage() {
@@ -29,14 +28,14 @@ export default function LandingPage() {
         <div className="mx-auto max-w-4xl space-y-10 text-center">
           <div className="space-y-3">
             <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber/80">
-              The loop
+              GTM factory
             </p>
             <h2 className="font-display text-balance text-[2rem] leading-[1.12] tracking-tight sm:text-3xl">
-              Create → test → fail → fix → pass
+              Create → test → iterate → launch
             </h2>
             <p className="mx-auto max-w-lg text-[15px] leading-relaxed text-muted">
-              Same feedback cycle that ships software — applied to growth
-              marketing. Agents don&apos;t stop at the first draft.
+              Same stage-gate discipline as a go-to-market motion — applied to
+              creative. Agents don&apos;t stop at the first draft.
             </p>
           </div>
 
@@ -59,7 +58,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-4xl">
           <div className="mb-12 space-y-3 text-center">
             <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber/80">
-              The agents
+              Factory stations
             </p>
             <h2 className="font-display text-balance text-[2rem] leading-[1.12] tracking-tight sm:text-3xl">
               Parallel specialists, one creative
@@ -86,11 +85,11 @@ export default function LandingPage() {
         <div className="mx-auto max-w-2xl space-y-8 text-center">
           <div className="space-y-4">
             <h2 className="font-display text-balance text-[2rem] leading-[1.12] tracking-tight sm:text-3xl">
-              Ready to forge?
+              Ready to run the factory?
             </h2>
             <p className="text-[15px] leading-relaxed text-muted">
               Enter a product brief and watch four agents iterate until the
-              creative clears the bar.
+              creative clears the launch gate.
             </p>
           </div>
 
@@ -99,7 +98,7 @@ export default function LandingPage() {
             className="group relative inline-flex items-center justify-center overflow-hidden rounded-2xl bg-amber px-10 py-3.5 text-[15px] font-semibold text-[#1a1408] transition hover:bg-amber-bright"
           >
             <span className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-60" />
-            <span className="relative">Forge a campaign</span>
+            <span className="relative">Run GTM Factory</span>
           </Link>
 
           <p className="font-mono text-[11px] tracking-wide text-muted/50">

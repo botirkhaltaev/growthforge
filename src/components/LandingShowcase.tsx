@@ -55,7 +55,7 @@ export function LandingShowcase() {
             custom={2}
             className="mx-auto max-w-md text-[15px] leading-relaxed text-muted"
           >
-            Agents iterate until CTR clears the 3% benchmark — from generic
+            Agents iterate until CTR clears the 3% launch gate — from generic
             eco copy to a lifestyle hook that converts.
           </motion.p>
         </motion.div>
