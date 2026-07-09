@@ -5,6 +5,7 @@ import { BriefScreen } from "@/components/BriefScreen";
 import { ForgeCanvas } from "@/components/ForgeCanvas";
 import { ScopeCard } from "@/components/ScopeCard";
 import { ReachoutPanel } from "@/components/ReachoutPanel";
+import type { LoopStep } from "@/components/FactoryLoop";
 import type {
   AdVariant,
   AgentActivity,
@@ -471,6 +472,36 @@ export default function ForgePage() {
     setStatusMessage("Live · replies route back to the factory · gate ≥3%");
   };
 
+  const navigableSteps: LoopStep[] =
+    phase === "launched" ||
+    phase === "scoping" ||
+    phase === "distributing" ||
+    phase === "brief"
+      ? []
+      : [
+          ...(scope ? (["scope"] as const) : []),
+          ...(variants.length > 0 ? (["distribute"] as const) : []),
+          ...(reachout.length > 0 ? (["reachout"] as const) : []),
+        ];
+
+  const goToStep = (step: LoopStep) => {
+    if (!navigableSteps.includes(step)) return;
+    if (step === "scope") {
+      setPhase("scope_ready");
+      return;
+    }
+    if (step === "distribute") {
+      setPhase("ready");
+      return;
+    }
+    setPhase("reachout");
+    setStatusMessage(
+      reachout.length
+        ? "Reach-out cadence ready · review touches"
+        : "Planning reach-out cadence…"
+    );
+  };
+
   const onReset = () => {
     abortRef.current?.abort();
     videoAbortRef.current?.abort();
@@ -522,6 +553,8 @@ export default function ForgePage() {
         loading={loading}
         onConfirm={runDistribute}
         onReset={onReset}
+        navigable={navigableSteps}
+        onNavigate={goToStep}
       />
     );
   }
@@ -539,6 +572,8 @@ export default function ForgePage() {
         statusMessage={statusMessage}
         onSend={onSend}
         onReset={onReset}
+        navigable={navigableSteps}
+        onNavigate={goToStep}
       />
     );
   }
@@ -556,6 +591,8 @@ export default function ForgePage() {
       onApproveReachout={onApproveReachout}
       onKill={onKill}
       onReset={onReset}
+      navigable={navigableSteps}
+      onNavigate={goToStep}
     />
   );
 }

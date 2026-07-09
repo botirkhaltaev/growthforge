@@ -5,7 +5,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import type { AdVariant, ReachoutTouch } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { FactoryLoop } from "./FactoryLoop";
+import { FactoryLoop, type LoopStep } from "./FactoryLoop";
 
 interface ReachoutPanelProps {
   touches: ReachoutTouch[];
@@ -14,6 +14,8 @@ interface ReachoutPanelProps {
   statusMessage?: string;
   onSend: () => void;
   onReset?: () => void;
+  navigable?: LoopStep[];
+  onNavigate?: (step: LoopStep) => void;
 }
 
 const CHANNEL_LABEL: Record<ReachoutTouch["channel"], string> = {
@@ -29,6 +31,8 @@ export function ReachoutPanel({
   statusMessage,
   onSend,
   onReset,
+  navigable,
+  onNavigate,
 }: ReachoutPanelProps) {
   const [muted, setMuted] = useState(true);
 
@@ -66,6 +70,8 @@ export function ReachoutPanel({
           compact
           active={launched ? null : "reachout"}
           completedThrough={launched ? "reachout" : "distribute"}
+          navigable={navigable}
+          onNavigate={onNavigate}
         />
       </div>
 
