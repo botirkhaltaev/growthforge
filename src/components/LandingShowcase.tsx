@@ -83,7 +83,7 @@ export function LandingShowcase() {
                 <span className="font-mono text-[11px] tracking-wider text-muted">
                   Variant {variant.label}
                   {variant.verdict === "pass" && (
-                    <span className="ml-2 text-pass">· launch ready</span>
+                    <span className="ml-2 text-pass">· gate cleared</span>
                   )}
                 </span>
                 <span

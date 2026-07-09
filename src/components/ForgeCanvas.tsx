@@ -100,11 +100,10 @@ export function ForgeCanvas({
       if (e.key === "ArrowLeft") goPrev();
       if (e.key === "ArrowRight") goNext();
       if (e.key === "t" || e.key === "T") setTrustOpen(true);
-      if (e.key === "Escape" && onReset) onReset();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [goPrev, goNext, trustOpen, onReset]);
+  }, [goPrev, goNext, trustOpen]);
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -127,18 +126,44 @@ export function ForgeCanvas({
 
   const anyActive = Object.values(activity).some(Boolean);
 
+  const videoBusy =
+    activity.producer ||
+    passVariant?.videoStatus === "producing" ||
+    variant?.videoStatus === "producing";
+
   const ctaLabel = (() => {
     if (distributing) return "Distributing work…";
+    if (videoBusy && (variant?.verdict === "pass" || hasPass)) {
+      return "Rendering video…";
+    }
     if (variant?.verdict === "pass") return "Approve → plan reach-out";
     if (hasPass) return `Jump to winner · Variant ${passVariant?.label}`;
     return "Waiting for a gate-ready variant…";
   })();
 
   const canJumpToWinner =
-    !distributing && ready && hasPass && variant?.verdict !== "pass";
+    !distributing &&
+    !videoBusy &&
+    ready &&
+    hasPass &&
+    variant?.verdict !== "pass";
   const canApprove =
-    !distributing && ready && variant?.verdict === "pass";
+    !distributing &&
+    !videoBusy &&
+    ready &&
+    variant?.verdict === "pass";
   const ctaDisabled = !canApprove && !canJumpToWinner;
+
+  const requestNewBrief = () => {
+    if (!onReset) return;
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm("Start a new brief? Current progress will be cleared.")
+    ) {
+      return;
+    }
+    onReset();
+  };
 
   const onCta = () => {
     if (canApprove) {
@@ -153,11 +178,11 @@ export function ForgeCanvas({
       <header className="flex items-center justify-between gap-3 px-5 pb-1 pt-[max(1rem,env(safe-area-inset-top))]">
         <button
           type="button"
-          onClick={onReset}
+          onClick={requestNewBrief}
           className="text-[11px] font-medium uppercase tracking-[0.22em] text-amber/75 transition hover:text-amber-bright"
-          title="New brief"
+          title="Start a new brief"
         >
-          GTM Factory
+          New brief
         </button>
         <div className="flex items-center gap-2">
           <Link
@@ -180,32 +205,25 @@ export function ForgeCanvas({
       <div className="px-5 pb-0.5 pt-1">
         <FactoryLoop
           compact
-          active={
-            distributing && !hasPass
-              ? loopStep
-              : ready && hasPass
-                ? "reachout"
-                : null
-          }
+          active={distributing ? loopStep ?? "distribute" : null}
           completedThrough={
-            hasPass
+            hasPass ||
+            variants.some(
+              (v) => v.verdict === "fail" || v.verdict === "close"
+            )
               ? "distribute"
-              : variants.some(
-                  (v) => v.verdict === "fail" || v.verdict === "close"
-                )
-                ? "distribute"
-                : "scope"
+              : "scope"
           }
         />
       </div>
 
-      <div className="flex h-7 items-center justify-center gap-1.5 px-5">
+      <div className="flex min-h-7 flex-wrap items-center justify-center gap-1 px-5 py-0.5">
         {anyActive
           ? AGENT_LABELS.filter(({ key }) => activity[key]).map(
               ({ key, label }) => (
                 <span
                   key={key}
-                  className="rounded-full bg-amber/15 px-2.5 py-1 font-mono text-[10px] tracking-wide text-amber-bright ring-1 ring-amber/30"
+                  className="rounded-full bg-amber/15 px-2 py-0.5 font-mono text-[10px] tracking-wide text-amber-bright ring-1 ring-amber/30"
                 >
                   {label}
                   <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-bright" />

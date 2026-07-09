@@ -34,10 +34,21 @@ export function ReachoutPanel({
       <header className="flex items-center justify-between gap-3 pb-3">
         <button
           type="button"
-          onClick={onReset}
+          onClick={() => {
+            if (!onReset) return;
+            if (
+              !window.confirm(
+                "Start a new brief? Current reach-out plan will be cleared."
+              )
+            ) {
+              return;
+            }
+            onReset();
+          }}
           className="text-[11px] font-medium uppercase tracking-[0.22em] text-amber/75 transition hover:text-amber-bright"
+          title="Start a new brief"
         >
-          GTM Factory
+          New brief
         </button>
         <Link
           href="/"
@@ -84,15 +95,38 @@ export function ReachoutPanel({
 
         {winner && (
           <div className="rounded-2xl border border-white/[0.07] bg-surface/70 px-4 py-3">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-muted/50">
-              Winning creative · Variant {winner.label}
-            </p>
-            <p className="mt-1 font-display text-[17px] leading-snug text-foreground">
-              {winner.headline}
-            </p>
-            <p className="mt-1 font-mono text-[11px] text-pass">
-              {winner.ctr}% CTR · cleared gate
-            </p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-muted/50">
+                  Winning creative · Variant {winner.label}
+                </p>
+                <p className="mt-1 font-display text-[17px] leading-snug text-foreground">
+                  {winner.headline}
+                </p>
+                <p className="mt-1 font-mono text-[11px] text-pass">
+                  {winner.ctr}% CTR · cleared gate
+                  {winner.videoStatus === "ready" && winner.videoUrl
+                    ? " · video ready"
+                    : winner.videoStatus === "producing"
+                      ? " · rendering video"
+                      : ""}
+                </p>
+              </div>
+              {winner.videoUrl ? (
+                <video
+                  src={winner.videoUrl}
+                  className="h-16 w-12 shrink-0 rounded-lg object-cover ring-1 ring-white/10"
+                  muted
+                  playsInline
+                  autoPlay
+                  loop
+                />
+              ) : winner.videoStatus === "producing" ? (
+                <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-lg bg-white/[0.04] ring-1 ring-amber/25">
+                  <span className="forge-ring h-4 w-4 rounded-full border-2 border-amber/25 border-t-amber" />
+                </div>
+              ) : null}
+            </div>
           </div>
         )}
 

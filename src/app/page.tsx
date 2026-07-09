@@ -13,6 +13,7 @@ const AGENTS = [
   { role: "Designer", task: "Creative direction" },
   { role: "Media Buyer", task: "Audience & enrichment" },
   { role: "Analyst", task: "Gate & forecast" },
+  { role: "Producer", task: "Video ad render" },
 ] as const;
 
 export default function LandingPage() {
@@ -69,7 +70,7 @@ export default function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {AGENTS.map((agent) => (
               <div
                 key={agent.role}
