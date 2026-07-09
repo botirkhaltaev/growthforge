@@ -31,7 +31,7 @@ export function LandingHero() {
           custom={0}
           className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber/80"
         >
-          Growth Forge
+          Growth Forge · GTM factory
         </motion.p>
 
         <motion.h1
@@ -39,8 +39,8 @@ export function LandingHero() {
           custom={1}
           className="font-display text-balance text-[2.75rem] leading-[1.06] tracking-tight sm:text-[3.5rem] lg:text-[4rem]"
         >
-          The software feedback loop,{" "}
-          <em className="not-italic text-amber-bright">applied to growth</em>
+          A go-to-market factory{" "}
+          <em className="not-italic text-amber-bright">in your pocket</em>
         </motion.h1>
 
         <motion.p
@@ -48,8 +48,8 @@ export function LandingHero() {
           custom={2}
           className="mx-auto max-w-xl text-[16px] leading-relaxed text-muted sm:text-[17px]"
         >
-          Four Cursor agents write, design, target, and score ad creative — then
-          iterate until it passes. The generated ad is the only interface.
+          Four Cursor agents create, test, and iterate campaign creative until
+          it clears the launch gate. The ad is the interface — not a dashboard.
         </motion.p>
 
         <motion.div
@@ -62,28 +62,28 @@ export function LandingHero() {
             className="group relative flex w-full items-center justify-center overflow-hidden rounded-2xl bg-amber px-8 py-3.5 text-[15px] font-semibold text-[#1a1408] transition hover:bg-amber-bright sm:w-auto"
           >
             <span className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-60" />
-            <span className="relative">Forge a campaign</span>
+            <span className="relative">Run GTM Factory</span>
           </Link>
           <a
             href="#how-it-works"
             className="rounded-2xl border border-white/[0.08] px-8 py-3.5 text-[15px] font-medium text-foreground/80 transition hover:border-amber/30 hover:text-foreground"
           >
-            How it works
+            How the factory works
           </a>
         </motion.div>
 
         <motion.div
           variants={fadeUp}
           custom={4}
-          className="flex items-center justify-center gap-6 pt-2 text-[11px] text-muted/60"
+          className="flex items-center justify-center gap-3 pt-2 font-mono text-[11px] text-muted/60"
         >
-          <span>Copy</span>
-          <span className="h-px w-4 bg-white/10" />
-          <span>Design</span>
-          <span className="h-px w-4 bg-white/10" />
-          <span>Target</span>
-          <span className="h-px w-4 bg-white/10" />
-          <span>Score</span>
+          <span>Create</span>
+          <span className="text-white/15">→</span>
+          <span>Test</span>
+          <span className="text-white/15">→</span>
+          <span>Iterate</span>
+          <span className="text-white/15">→</span>
+          <span className="text-pass/80">Launch</span>
         </motion.div>
       </motion.div>
     </section>

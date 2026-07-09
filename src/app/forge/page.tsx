@@ -103,7 +103,10 @@ export default function ForgePage() {
     setActiveIndex(0);
     setActivity(IDLE_ACTIVITY);
     setConfidence(0);
-    setStatusMessage("Connecting to agents…");
+    setStatusMessage("GTM factory · connecting stations…");
+
+    let sawComplete = false;
+    let sawVariant = false;
 
     try {
       const res = await fetch("/api/campaign", {
@@ -135,23 +138,36 @@ export default function ForgePage() {
           if (!line) continue;
           try {
             const event = JSON.parse(line.slice(6)) as CampaignEvent;
+            if (event.type === "complete") sawComplete = true;
+            if (event.type === "variant_ready" && event.variant) sawVariant = true;
             handleEvent(event);
           } catch {
             // ignore malformed SSE
           }
         }
       }
+
+      if (!sawComplete) {
+        setActivity(IDLE_ACTIVITY);
+        setLoading(false);
+        if (sawVariant) {
+          setPhase("ready");
+          setStatusMessage((m) => m || "Campaign ready.");
+        } else {
+          setPhase("brief");
+          setStatusMessage("Forge ended early — try again.");
+        }
+      }
     } catch (err) {
       if ((err as Error).name === "AbortError") {
         setStatusMessage("Agents halted.");
-        setPhase(variants.length ? "ready" : "brief");
+        setPhase(sawVariant ? "ready" : "brief");
       } else {
         setStatusMessage(
           err instanceof Error ? err.message : "Something went wrong"
         );
         setPhase("brief");
       }
-    } finally {
       setLoading(false);
       setActivity(IDLE_ACTIVITY);
     }
@@ -180,7 +196,20 @@ export default function ForgePage() {
   };
 
   if (phase === "brief") {
-    return <BriefScreen onSubmit={forge} loading={loading} />;
+    const briefError =
+      statusMessage &&
+      !statusMessage.toLowerCase().includes("connecting") &&
+      !statusMessage.toLowerCase().includes("gtm factory") &&
+      !statusMessage.toLowerCase().includes("factory loop")
+        ? statusMessage
+        : undefined;
+    return (
+      <BriefScreen
+        onSubmit={forge}
+        loading={loading}
+        errorMessage={briefError}
+      />
+    );
   }
 
   return (

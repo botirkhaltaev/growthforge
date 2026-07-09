@@ -4,7 +4,7 @@ globs:
   - "**/*"
 ---
 
-# Growth Forge — Generative Marketing Studio
+# Growth Forge — GTM Factory
 
 - Next.js App Router + React + TypeScript + Tailwind + Framer Motion
 - `@cursor/sdk` for real agent orchestration (parallel agents, not fictional subagent delegation)
@@ -12,7 +12,9 @@ globs:
 - Dark theme: `#0A0A0F` background, amber glows, minimal chrome
 - Ambient agent activity: CSS text-shadow pulse, hue-rotate shimmer — NOT progress bars or agent cards
 - Framer Motion: AnimatePresence for version morph, layout animations
-- Mobile-first: swipe for version comparison, hold for trust overlay
+- Mobile-first: swipe for version comparison, hold for launch-gate overlay
 - DEMO_MODE=true on Vercel (theatrical SSE). DEMO_MODE=false locally for real SDK
-- One primary action: Approve & Deploy
+- GTM factory stations: Create → Test → Iterate → Launch
+- One primary action: Approve & Launch
 - Keep UI calm — output-first, chrome-last
+- Routes: `/` landing, `/forge` interactive factory

@@ -11,8 +11,15 @@ interface AdCreativeProps {
   mediaBuyerActive?: boolean;
   analystActive?: boolean;
   skeleton?: boolean;
+  showVerdict?: boolean;
   className?: string;
 }
+
+const VERDICT_STYLES = {
+  fail: "bg-fail/20 text-fail ring-fail/30",
+  close: "bg-close/20 text-close ring-close/30",
+  pass: "bg-pass/20 text-pass ring-pass/30",
+} as const;
 
 export function AdCreative({
   variant,
@@ -21,6 +28,7 @@ export function AdCreative({
   mediaBuyerActive = false,
   analystActive = false,
   skeleton = false,
+  showVerdict = false,
   className,
 }: AdCreativeProps) {
   if (skeleton) {
@@ -38,12 +46,21 @@ export function AdCreative({
             <p className="font-mono text-[11px] tracking-wide text-muted">
               Forging creative…
             </p>
+            <p className="max-w-[14rem] text-center text-[10px] leading-relaxed text-muted/50">
+              Agents writing copy, composing visuals, setting targets
+            </p>
           </div>
         </div>
         <div className="space-y-3 bg-black/40 px-6 py-6">
-          <div className="skeleton-breathe h-7 w-4/5 rounded-md bg-white/10" style={{ width: "85%" }} />
+          <div
+            className="skeleton-breathe h-7 rounded-md bg-white/10"
+            style={{ width: "85%" }}
+          />
           <div className="skeleton-breathe h-3 w-full rounded bg-white/[0.06]" />
-          <div className="skeleton-breathe h-3 w-2/3 rounded bg-white/[0.06]" style={{ width: "65%" }} />
+          <div
+            className="skeleton-breathe h-3 rounded bg-white/[0.06]"
+            style={{ width: "65%" }}
+          />
           <div className="flex items-center justify-between pt-3">
             <div className="skeleton-breathe h-8 w-20 rounded bg-white/[0.06]" />
             <div className="skeleton-breathe h-10 w-28 rounded-full bg-amber/20" />
@@ -57,27 +74,42 @@ export function AdCreative({
     <div
       className={cn(
         "relative mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-[1.75rem] border border-white/[0.08] shadow-2xl shadow-black/50",
+        variant.verdict === "pass" && "ring-1 ring-pass/25",
         className
       )}
       style={{ background: variant.gradient }}
     >
-      {/* Platform chips */}
-      <div className="absolute right-4 top-4 z-10 flex gap-1.5">
-        {["IG", "FB"].map((p, i) => (
+      {/* Platform chips + verdict */}
+      <div className="absolute left-4 right-4 top-4 z-10 flex items-start justify-between gap-2">
+        {showVerdict ? (
           <span
-            key={p}
             className={cn(
-              "rounded-full bg-black/45 px-2.5 py-1 font-mono text-[10px] font-medium tracking-wider text-white/75 backdrop-blur-md",
-              mediaBuyerActive && "pulse-platform ring-1 ring-amber/50"
+              "rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider ring-1 backdrop-blur-md",
+              VERDICT_STYLES[variant.verdict]
             )}
-            style={i === 1 ? { animationDelay: "0.3s" } : undefined}
           >
-            {p}
+            {variant.verdict}
           </span>
-        ))}
+        ) : (
+          <span />
+        )}
+        <div className="flex gap-1.5">
+          {["IG", "FB"].map((p, i) => (
+            <span
+              key={p}
+              className={cn(
+                "rounded-full bg-black/45 px-2.5 py-1 font-mono text-[10px] font-medium tracking-wider text-white/75 backdrop-blur-md",
+                mediaBuyerActive && "pulse-platform ring-1 ring-amber/50"
+              )}
+              style={i === 1 ? { animationDelay: "0.3s" } : undefined}
+            >
+              {p}
+            </span>
+          ))}
+        </div>
       </div>
 
-      {/* Visual plane — abstract product art, not emoji */}
+      {/* Visual plane */}
       <div
         className={cn(
           "relative flex h-48 items-center justify-center overflow-hidden sm:h-56",
@@ -96,10 +128,13 @@ export function AdCreative({
           initial={{ scale: 0.92, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 240, damping: 24 }}
-          className="relative z-10 flex h-36 w-36 items-center justify-center rounded-[2rem] border border-white/15 bg-white/10 shadow-2xl backdrop-blur-xl sm:h-40 sm:w-40"
+          className="relative z-10 flex h-36 w-36 flex-col items-center justify-center rounded-[2rem] border border-white/15 bg-white/10 shadow-2xl backdrop-blur-xl sm:h-40 sm:w-40"
         >
-          <span className="font-display text-5xl text-white/90 sm:text-6xl">
+          <span className="font-display text-5xl leading-none text-white/90 sm:text-6xl">
             {variant.visualEmoji}
+          </span>
+          <span className="mt-2 font-mono text-[9px] uppercase tracking-[0.2em] text-white/35">
+            creative
           </span>
         </motion.div>
         <p className="absolute bottom-3 left-0 right-0 z-10 text-center font-mono text-[10px] tracking-wide text-white/45">
@@ -119,11 +154,21 @@ export function AdCreative({
           {variant.headline}
         </motion.h2>
 
-        <p className="text-[13.5px] leading-relaxed text-white/65">{variant.body}</p>
+        <p className="text-[13.5px] leading-relaxed text-white/65">
+          {variant.body}
+        </p>
+
+        {variant.iterationNote && showVerdict && (
+          <p className="line-clamp-2 font-mono text-[10px] leading-relaxed text-white/40">
+            {variant.iterationNote}
+          </p>
+        )}
 
         <div className="flex items-end justify-between gap-3 pt-2">
           <div>
-            <p className="text-[11px] tracking-wide text-white/45">{variant.brand}</p>
+            <p className="text-[11px] tracking-wide text-white/45">
+              {variant.brand}
+            </p>
             <p
               className={cn(
                 "font-mono text-lg font-medium text-amber-bright",

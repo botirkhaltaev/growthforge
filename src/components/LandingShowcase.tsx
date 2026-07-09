@@ -55,7 +55,7 @@ export function LandingShowcase() {
             custom={2}
             className="mx-auto max-w-md text-[15px] leading-relaxed text-muted"
           >
-            Agents iterate until CTR clears the 3% benchmark — from generic
+            Agents iterate until CTR clears the 3% launch gate — from generic
             eco copy to a lifestyle hook that converts.
           </motion.p>
         </motion.div>
@@ -84,7 +84,11 @@ export function LandingShowcase() {
                   {variant.ctr}% CTR · {variant.verdict}
                 </span>
               </div>
-              <AdCreative variant={variant} className="max-w-sm" />
+              <AdCreative
+                variant={variant}
+                showVerdict
+                className="max-w-sm"
+              />
               <p className="max-w-xs text-center text-[13px] leading-relaxed text-muted/80">
                 {variant.iterationNote}
               </p>

@@ -72,16 +72,20 @@ export async function* demoCampaignStream(
 
   yield {
     type: "system",
-    message: `Creating foreman for: ${product.slice(0, 80)}…`,
+    message: `GTM factory starting · ${product.slice(0, 64)}…`,
   };
   await sleep(400);
 
-  yield { type: "agent_created", role: "foreman", message: "Foreman online" };
+  yield {
+    type: "agent_created",
+    role: "foreman",
+    message: "Foreman online · create → test → iterate → launch",
+  };
   await sleep(300);
 
   yield {
     type: "system",
-    message: "Spawning 4 specialist agents on parallel runtimes…",
+    message: "Spawning 4 GTM stations on parallel runtimes…",
   };
   await sleep(200);
 
@@ -144,20 +148,20 @@ export async function* demoCampaignStream(
   yield {
     type: "tester",
     role: "tester",
-    message: "Running A/B simulation on Variant A…",
+    message: "Test · A/B simulation on Variant A…",
   };
   await sleep(700);
   yield {
     type: "variant_ready",
     variant: DEMO_VARIANTS[0],
-    message: `Variant A: ${DEMO_VARIANTS[0].ctr}% CTR — FAIL`,
+    message: `Fail · Variant A ${DEMO_VARIANTS[0].ctr}% CTR (need ≥${BENCHMARK_CTR}%)`,
   };
   await sleep(400);
 
   yield {
     type: "iteration",
     iteration: 1,
-    message: "Below benchmark. Re-dispatching Copywriter…",
+    message: "Iterate · Re-dispatching Copywriter…",
     role: "copywriter",
   };
   yield { type: "agent_active", role: "copywriter" };
@@ -173,20 +177,20 @@ export async function* demoCampaignStream(
   yield {
     type: "tester",
     role: "tester",
-    message: "Re-testing Variant B…",
+    message: "Test · Re-scoring Variant B…",
   };
   await sleep(700);
   yield {
     type: "variant_ready",
     variant: DEMO_VARIANTS[1],
-    message: `Variant B: ${DEMO_VARIANTS[1].ctr}% CTR — CLOSE`,
+    message: `Fail · Variant B ${DEMO_VARIANTS[1].ctr}% CTR — close but under bar`,
   };
   await sleep(400);
 
   yield {
     type: "iteration",
     iteration: 2,
-    message: "Close but under 3%. Re-dispatching Designer…",
+    message: "Iterate · Re-dispatching Designer + Copywriter…",
     role: "designer",
   };
   yield { type: "agent_active", role: "designer" };
@@ -210,13 +214,13 @@ export async function* demoCampaignStream(
   yield {
     type: "tester",
     role: "tester",
-    message: "Final A/B simulation on Variant C…",
+    message: "Test · Final A/B simulation on Variant C…",
   };
   await sleep(800);
   yield {
     type: "variant_ready",
     variant: DEMO_VARIANTS[2],
-    message: `Variant C: ${DEMO_VARIANTS[2].ctr}% CTR — PASS`,
+    message: `Pass · Variant C ${DEMO_VARIANTS[2].ctr}% CTR — clears ${BENCHMARK_CTR}% bar`,
   };
   await sleep(300);
 
@@ -224,6 +228,6 @@ export async function* demoCampaignStream(
     type: "complete",
     variants: DEMO_VARIANTS,
     confidence: 94,
-    message: "All gates passed. Ready to deploy.",
+    message: "Launch gate open · Variant C cleared 3% CTR. Ready to launch.",
   };
 }
