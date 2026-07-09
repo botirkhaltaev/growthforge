@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import type { AdVariant } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -10,6 +11,7 @@ interface AdCreativeProps {
   designerActive?: boolean;
   mediaBuyerActive?: boolean;
   analystActive?: boolean;
+  producerActive?: boolean;
   skeleton?: boolean;
   className?: string;
 }
@@ -20,9 +22,15 @@ export function AdCreative({
   designerActive = false,
   mediaBuyerActive = false,
   analystActive = false,
+  producerActive = false,
   skeleton = false,
   className,
 }: AdCreativeProps) {
+  const [muted, setMuted] = useState(true);
+  const hasVideo = Boolean(variant.videoUrl);
+  const producing =
+    variant.videoStatus === "producing" || (producerActive && !hasVideo);
+
   if (skeleton) {
     return (
       <div
@@ -62,7 +70,7 @@ export function AdCreative({
       style={{ background: variant.gradient }}
     >
       {/* Platform chips */}
-      <div className="absolute right-4 top-4 z-10 flex gap-1.5">
+      <div className="absolute right-4 top-4 z-20 flex gap-1.5">
         {["IG", "FB"].map((p, i) => (
           <span
             key={p}
@@ -77,34 +85,75 @@ export function AdCreative({
         ))}
       </div>
 
-      {/* Visual plane — abstract product art, not emoji */}
+      {/* Visual plane — video when Producer finishes, else abstract product art */}
       <div
         className={cn(
           "relative flex h-48 items-center justify-center overflow-hidden sm:h-56",
-          designerActive && "shimmer-active"
+          (designerActive || producing) && "shimmer-active"
         )}
       >
-        <div
-          className="absolute inset-0 opacity-40"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 30% 40%, rgba(255,255,255,0.18), transparent 45%), radial-gradient(circle at 70% 60%, rgba(0,0,0,0.35), transparent 50%)",
-          }}
-        />
-        <motion.div
-          key={variant.id + "-art"}
-          initial={{ scale: 0.92, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 240, damping: 24 }}
-          className="relative z-10 flex h-36 w-36 items-center justify-center rounded-[2rem] border border-white/15 bg-white/10 shadow-2xl backdrop-blur-xl sm:h-40 sm:w-40"
-        >
-          <span className="font-display text-5xl text-white/90 sm:text-6xl">
-            {variant.visualEmoji}
-          </span>
-        </motion.div>
-        <p className="absolute bottom-3 left-0 right-0 z-10 text-center font-mono text-[10px] tracking-wide text-white/45">
-          {variant.visualCaption}
-        </p>
+        {hasVideo ? (
+          <>
+            <video
+              key={variant.videoUrl}
+              src={variant.videoUrl}
+              className="absolute inset-0 h-full w-full object-cover"
+              autoPlay
+              loop
+              muted={muted}
+              playsInline
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMuted((m) => !m);
+              }}
+              className="absolute bottom-3 right-3 z-20 rounded-full bg-black/55 px-3 py-1.5 font-mono text-[10px] tracking-wide text-white/85 backdrop-blur-md transition hover:bg-black/70"
+            >
+              {muted ? "Tap to unmute" : "Mute"}
+            </button>
+            <p className="absolute bottom-3 left-3 z-10 font-mono text-[10px] tracking-wide text-white/55">
+              v{variant.label} · video ad
+            </p>
+          </>
+        ) : (
+          <>
+            <div
+              className="absolute inset-0 opacity-40"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle at 30% 40%, rgba(255,255,255,0.18), transparent 45%), radial-gradient(circle at 70% 60%, rgba(0,0,0,0.35), transparent 50%)",
+              }}
+            />
+            <motion.div
+              key={variant.id + "-art"}
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 240, damping: 24 }}
+              className="relative z-10 flex h-36 w-36 items-center justify-center rounded-[2rem] border border-white/15 bg-white/10 shadow-2xl backdrop-blur-xl sm:h-40 sm:w-40"
+            >
+              {producing ? (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="forge-ring h-7 w-7 rounded-full border-2 border-amber/25 border-t-amber" />
+                  <span className="font-mono text-[10px] tracking-wide text-white/70">
+                    Rendering…
+                  </span>
+                </div>
+              ) : (
+                <span className="font-display text-5xl text-white/90 sm:text-6xl">
+                  {variant.visualEmoji}
+                </span>
+              )}
+            </motion.div>
+            <p className="absolute bottom-3 left-0 right-0 z-10 text-center font-mono text-[10px] tracking-wide text-white/45">
+              {producing
+                ? "Producer · gemini-omni-flash"
+                : variant.visualCaption}
+            </p>
+          </>
+        )}
       </div>
 
       {/* Copy */}
