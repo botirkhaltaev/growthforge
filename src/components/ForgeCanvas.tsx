@@ -30,6 +30,35 @@ const AGENT_LABELS: { key: keyof AgentActivity; label: string }[] = [
   { key: "producer", label: "Video" },
 ];
 
+type PillState = "idle" | "working" | "generating" | "ready" | "failed";
+
+function agentPillState(
+  key: keyof AgentActivity,
+  activity: AgentActivity,
+  opts: {
+    forging: boolean;
+    hasVariants: boolean;
+    hasPass: boolean;
+    videoStatus?: AdVariant["videoStatus"];
+    hasVideoUrl?: boolean;
+  }
+): PillState {
+  if (key === "producer") {
+    if (opts.hasVideoUrl || opts.videoStatus === "ready") return "ready";
+    if (opts.videoStatus === "failed") return "failed";
+    if (activity.producer || opts.videoStatus === "producing") {
+      return "generating";
+    }
+    // Waiting for a pass before Producer starts
+    return opts.hasPass ? "generating" : "idle";
+  }
+
+  if (activity[key]) return "working";
+  // After agents have produced variants (or forge finished), mark specialists done
+  if (opts.hasVariants && (!opts.forging || opts.hasPass)) return "ready";
+  return "idle";
+}
+
 export function ForgeCanvas({
   variants,
   activeIndex,
@@ -184,25 +213,74 @@ export function ForgeCanvas({
         />
       </div>
 
-      {/* Ambient agent strip — only lit agents, never a dashboard */}
-      <div className="flex h-7 items-center justify-center gap-1.5 px-5">
-        {anyActive
-          ? AGENT_LABELS.filter(({ key }) => activity[key]).map(
-              ({ key, label }) => (
-                <span
-                  key={key}
-                  className="rounded-full bg-amber/15 px-2.5 py-1 font-mono text-[10px] tracking-wide text-amber-bright ring-1 ring-amber/30"
-                >
-                  {label}
-                  <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-bright" />
-                </span>
-              )
-            )
-          : forging && (
-              <span className="font-mono text-[10px] text-muted/40">
-                Agents on the creative…
+      {/* Agent strip — all pills visible; Video signals generating → ready */}
+      <div className="flex flex-col items-center gap-1 px-5 py-0.5">
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
+          {AGENT_LABELS.map(({ key, label }) => {
+            const state = agentPillState(key, activity, {
+              forging,
+              hasVariants: variants.length > 0,
+              hasPass,
+              videoStatus: passVariant?.videoStatus,
+              hasVideoUrl: Boolean(passVariant?.videoUrl),
+            });
+
+            return (
+              <span
+                key={key}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] tracking-wide transition",
+                  state === "idle" && "text-muted/40",
+                  state === "working" &&
+                    "bg-amber/15 text-amber-bright ring-1 ring-amber/30",
+                  state === "generating" &&
+                    "pill-generating bg-amber/20 text-amber-bright ring-1 ring-amber/45",
+                  state === "ready" &&
+                    "pill-ready bg-pass/15 text-pass ring-1 ring-pass/35",
+                  state === "failed" &&
+                    "bg-fail/10 text-fail/80 ring-1 ring-fail/25"
+                )}
+                title={
+                  key === "producer"
+                    ? state === "generating"
+                      ? "Video generating…"
+                      : state === "ready"
+                        ? "Video ready to view"
+                        : state === "failed"
+                          ? "Video unavailable"
+                          : "Waiting for a passing variant"
+                    : undefined
+                }
+              >
+                {label}
+                {state === "working" && (
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-bright" />
+                )}
+                {state === "generating" && (
+                  <span className="forge-ring inline-block h-2.5 w-2.5 rounded-full border border-amber/30 border-t-amber" />
+                )}
+                {state === "ready" && (
+                  <span className="text-[9px] leading-none" aria-hidden>
+                    ✓
+                  </span>
+                )}
               </span>
-            )}
+            );
+          })}
+        </div>
+        {passVariant?.videoStatus === "producing" || activity.producer ? (
+          <p className="font-mono text-[9px] tracking-wide text-amber/70">
+            Video generating…
+          </p>
+        ) : passVariant?.videoUrl || passVariant?.videoStatus === "ready" ? (
+          <p className="font-mono text-[9px] tracking-wide text-pass/80">
+            Video ready to view
+          </p>
+        ) : passVariant?.videoStatus === "failed" ? (
+          <p className="font-mono text-[9px] tracking-wide text-fail/70">
+            Video unavailable — static creative
+          </p>
+        ) : null}
       </div>
 
       {/* Canvas */}
