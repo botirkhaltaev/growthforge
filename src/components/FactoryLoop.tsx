@@ -135,6 +135,14 @@ export function inferLoopStep(opts: {
   ) {
     return "reachout";
   }
+  if (
+    msg.includes("producer") ||
+    msg.includes("video ad") ||
+    msg.includes("gemini-omni") ||
+    msg.includes("rendering video")
+  ) {
+    return "distribute";
+  }
   if (variantCount === 0 && msg.includes("task")) return "distribute";
   return "distribute";
 }

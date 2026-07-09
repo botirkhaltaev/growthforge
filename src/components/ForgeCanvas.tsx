@@ -29,6 +29,7 @@ const AGENT_LABELS: { key: keyof AgentActivity; label: string }[] = [
   { key: "designer", label: "Design" },
   { key: "media_buyer", label: "Audience" },
   { key: "analyst", label: "Gate" },
+  { key: "producer", label: "Video" },
 ];
 
 export function ForgeCanvas({
@@ -278,6 +279,7 @@ export function ForgeCanvas({
                 designerActive={activity.designer}
                 mediaBuyerActive={activity.media_buyer}
                 analystActive={activity.analyst}
+                producerActive={activity.producer}
                 showVerdict={!distributing}
               />
             </motion.div>

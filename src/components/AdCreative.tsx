@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import type { AdVariant } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -10,6 +11,7 @@ interface AdCreativeProps {
   designerActive?: boolean;
   mediaBuyerActive?: boolean;
   analystActive?: boolean;
+  producerActive?: boolean;
   skeleton?: boolean;
   showVerdict?: boolean;
   /** When false, hide the in-card iteration note (useful on landing showcase) */
@@ -26,10 +28,23 @@ const VERDICT_STYLES = {
 function CreativeArt({
   label,
   designerActive,
+  producing,
 }: {
   label: AdVariant["label"];
   designerActive: boolean;
+  producing: boolean;
 }) {
+  if (producing) {
+    return (
+      <div className="relative z-10 flex h-36 w-36 flex-col items-center justify-center gap-2 sm:h-40 sm:w-40">
+        <div className="forge-ring h-7 w-7 rounded-full border-2 border-amber/25 border-t-amber" />
+        <span className="font-mono text-[10px] tracking-wide text-white/70">
+          Rendering…
+        </span>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       key={label + "-art"}
@@ -41,7 +56,6 @@ function CreativeArt({
         designerActive && "shimmer-active"
       )}
     >
-      {/* Abstract product mark — unique per variant */}
       {label === "A" && (
         <div className="relative h-28 w-28">
           <div className="absolute inset-0 rounded-[2rem] border border-white/20 bg-white/10 backdrop-blur-xl" />
@@ -74,13 +88,17 @@ export function AdCreative({
   designerActive = false,
   mediaBuyerActive = false,
   analystActive = false,
+  producerActive = false,
   skeleton = false,
   showVerdict = false,
   showIterationNote,
   className,
 }: AdCreativeProps) {
-  const noteVisible =
-    showIterationNote ?? showVerdict;
+  const [muted, setMuted] = useState(true);
+  const noteVisible = showIterationNote ?? showVerdict;
+  const hasVideo = Boolean(variant.videoUrl);
+  const producing =
+    variant.videoStatus === "producing" || (producerActive && !hasVideo);
 
   if (skeleton) {
     return (
@@ -130,8 +148,7 @@ export function AdCreative({
       )}
       style={{ background: variant.gradient }}
     >
-      {/* Platform chips + verdict */}
-      <div className="absolute left-4 right-4 top-4 z-10 flex items-start justify-between gap-2">
+      <div className="absolute left-4 right-4 top-4 z-20 flex items-start justify-between gap-2">
         {showVerdict ? (
           <span
             className={cn(
@@ -160,22 +177,61 @@ export function AdCreative({
         </div>
       </div>
 
-      {/* Visual plane */}
-      <div className="relative flex h-48 items-center justify-center overflow-hidden sm:h-56">
-        <div
-          className="absolute inset-0 opacity-40"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 30% 40%, rgba(255,255,255,0.18), transparent 45%), radial-gradient(circle at 70% 60%, rgba(0,0,0,0.35), transparent 50%)",
-          }}
-        />
-        <CreativeArt label={variant.label} designerActive={designerActive} />
-        <p className="absolute bottom-3 left-0 right-0 z-10 text-center font-mono text-[10px] tracking-wide text-white/45">
-          {variant.visualCaption}
-        </p>
+      <div
+        className={cn(
+          "relative flex h-48 items-center justify-center overflow-hidden sm:h-56",
+          (designerActive || producing) && "shimmer-active"
+        )}
+      >
+        {hasVideo ? (
+          <>
+            <video
+              key={variant.videoUrl}
+              src={variant.videoUrl}
+              className="absolute inset-0 h-full w-full object-cover"
+              autoPlay
+              loop
+              muted={muted}
+              playsInline
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMuted((m) => !m);
+              }}
+              className="absolute bottom-3 right-3 z-20 rounded-full bg-black/55 px-3 py-1.5 font-mono text-[10px] tracking-wide text-white/85 backdrop-blur-md transition hover:bg-black/70"
+            >
+              {muted ? "Tap to unmute" : "Mute"}
+            </button>
+            <p className="absolute bottom-3 left-3 z-10 font-mono text-[10px] tracking-wide text-white/55">
+              v{variant.label} · video ad
+            </p>
+          </>
+        ) : (
+          <>
+            <div
+              className="absolute inset-0 opacity-40"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle at 30% 40%, rgba(255,255,255,0.18), transparent 45%), radial-gradient(circle at 70% 60%, rgba(0,0,0,0.35), transparent 50%)",
+              }}
+            />
+            <CreativeArt
+              label={variant.label}
+              designerActive={designerActive}
+              producing={producing}
+            />
+            <p className="absolute bottom-3 left-0 right-0 z-10 text-center font-mono text-[10px] tracking-wide text-white/45">
+              {producing
+                ? "Producer · gemini-omni-flash"
+                : variant.visualCaption}
+            </p>
+          </>
+        )}
       </div>
 
-      {/* Copy */}
       <div className="relative z-10 space-y-3 bg-black/40 px-6 pb-7 pt-5 backdrop-blur-md">
         <motion.h2
           key={variant.headline}
