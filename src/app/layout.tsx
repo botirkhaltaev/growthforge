@@ -24,7 +24,7 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Growth Forge — GTM factory for ads",
   description:
-    "Scope → distribute → reach out. Four Cursor agents scope ICP, distribute work, and plan a multi-touch cadence. The creative is the interface.",
+    "Scope → distribute → reach out. Five Cursor agents scope ICP, distribute work, and plan a multi-touch cadence. The creative is the interface.",
   openGraph: {
     title: "Growth Forge",
     description:

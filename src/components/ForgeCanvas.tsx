@@ -148,6 +148,11 @@ export function ForgeCanvas({
   }, [variants.length, ready, distributing]);
 
   const onTouchStart = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("button, video, a, [data-no-hold]")) {
+      touchStartX.current = null;
+      return;
+    }
     touchStartX.current = e.touches[0].clientX;
     startHold();
   };
@@ -240,7 +245,9 @@ export function ForgeCanvas({
             onClick={() => setTrustOpen(true)}
             className={cn(
               "rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 font-mono text-[10px] tracking-wide text-muted transition hover:border-amber/30 hover:text-amber-bright",
-              ready && hasPass && "loop-pulse border-amber/35 text-amber-bright"
+              (ready && hasPass) || (distributing && activity.analyst)
+                ? "loop-pulse border-amber/35 text-amber-bright"
+                : ""
             )}
           >
             Gate{confidence > 0 ? ` · ${confidence}%` : ""}

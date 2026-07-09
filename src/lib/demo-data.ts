@@ -83,6 +83,154 @@ export const DEMO_SCOPE: GtmScope = {
   positioning: "Lifestyle commute hook over generic eco claim",
 };
 
+/** AI notes demo set — matches BriefScreen "AI notes" example */
+export const DEMO_VARIANTS_AI: AdVariant[] = [
+  {
+    id: "a",
+    label: "A",
+    headline: "AI meeting notes for busy teams",
+    body: "Auto-summarize every Zoom. Share action items before the next standup.",
+    cta: "Start Free",
+    brand: "NoteForge",
+    price: "$12/mo",
+    gradient: "linear-gradient(155deg, #1a3a6b 0%, #0f2440 45%, #0a1420 100%)",
+    visualEmoji: "01",
+    visualCaption: "vA · generic SaaS",
+    ctr: 1.1,
+    cvr: 0.7,
+    roas: 1.0,
+    revenueForecast: 42_000,
+    verdict: "fail",
+    iterationNote: "Generic SaaS claim. No founder pain.",
+  },
+  {
+    id: "b",
+    label: "B",
+    headline: "Get 4 hours back from every week of meetings",
+    body: "Notes, decisions, and owners — drafted before you leave the call.",
+    cta: "Reclaim Your Week",
+    brand: "NoteForge",
+    price: "$12/mo",
+    gradient: "linear-gradient(155deg, #2a1a6b 0%, #1a0f40 45%, #0e0a20 100%)",
+    visualEmoji: "02",
+    visualCaption: "vB · time-back metric",
+    ctr: 2.7,
+    cvr: 1.5,
+    roas: 2.3,
+    revenueForecast: 98_000,
+    verdict: "close",
+    iterationNote:
+      "Copywriter led with time-back (+145% CTR). Still below 3% benchmark.",
+  },
+  {
+    id: "c",
+    label: "C",
+    headline: "Your cofounder stopped asking 'what did we decide?'",
+    body: "Meeting notes that ship with owners. Built for Series A chaos.",
+    cta: "Try NoteForge",
+    brand: "NoteForge",
+    price: "$12/mo",
+    gradient: "linear-gradient(155deg, #3d2810 0%, #6b4423 40%, #120e0a 100%)",
+    visualEmoji: "03",
+    visualCaption: "vC · founder lifestyle",
+    ctr: 4.3,
+    cvr: 3.1,
+    roas: 4.5,
+    revenueForecast: 185_000,
+    verdict: "pass",
+    iterationNote:
+      "Copywriter used founder voice. Designer swapped to warm amber. Total +291% CTR.",
+  },
+];
+
+/** Run club demo set — matches BriefScreen "Run club" example */
+export const DEMO_VARIANTS_RUN: AdVariant[] = [
+  {
+    id: "a",
+    label: "A",
+    headline: "Carbon-plate running shoes for athletes",
+    body: "Engineered for race day. Lightweight. Responsive. Built to PR.",
+    cta: "Shop Now",
+    brand: "Stride Lab",
+    price: "$180",
+    gradient: "linear-gradient(155deg, #1a4a3c 0%, #0f2d26 45%, #0a1814 100%)",
+    visualEmoji: "01",
+    visualCaption: "vA · product studio",
+    ctr: 1.3,
+    cvr: 0.9,
+    roas: 1.2,
+    revenueForecast: 55_000,
+    verdict: "fail",
+    iterationNote: "Spec-sheet energy. No race-day emotion.",
+  },
+  {
+    id: "b",
+    label: "B",
+    headline: "Shave 47 seconds off your half — without the hype tax",
+    body: "Carbon plate. Soft landings. Race-day edge for urban marathoners.",
+    cta: "See the Plate",
+    brand: "Stride Lab",
+    price: "$180",
+    gradient: "linear-gradient(155deg, #1a3a6b 0%, #0e2448 45%, #081428 100%)",
+    visualEmoji: "02",
+    visualCaption: "vB · race metric",
+    ctr: 2.9,
+    cvr: 1.7,
+    roas: 2.5,
+    revenueForecast: 120_000,
+    verdict: "close",
+    iterationNote:
+      "Copywriter led with race delta (+123% CTR). Still under 3% bar.",
+  },
+  {
+    id: "c",
+    label: "C",
+    headline: "Your 6am loop just got unfair",
+    body: "The plate that turns Tuesday miles into race-day confidence.",
+    cta: "Lace Up",
+    brand: "Stride Lab",
+    price: "$180",
+    gradient: "linear-gradient(155deg, #3d2810 0%, #6b4423 40%, #120e0a 100%)",
+    visualEmoji: "03",
+    visualCaption: "vC · dawn run",
+    ctr: 4.0,
+    cvr: 2.8,
+    roas: 4.1,
+    revenueForecast: 165_000,
+    verdict: "pass",
+    iterationNote:
+      "Copywriter went lifestyle. Designer used dawn amber. Total +208% CTR.",
+  },
+];
+
+export type DemoBriefKind = "eco" | "ai" | "run";
+
+export function detectBriefKind(brief: string): DemoBriefKind {
+  const lower = brief.toLowerCase();
+  if (
+    /\bai\b/.test(lower) ||
+    lower.includes("notes") ||
+    lower.includes("meeting")
+  ) {
+    return "ai";
+  }
+  if (
+    lower.includes("run") ||
+    lower.includes("shoe") ||
+    lower.includes("marathon")
+  ) {
+    return "run";
+  }
+  return "eco";
+}
+
+export function variantsForBrief(brief: string): AdVariant[] {
+  const kind = detectBriefKind(brief);
+  if (kind === "ai") return DEMO_VARIANTS_AI;
+  if (kind === "run") return DEMO_VARIANTS_RUN;
+  return DEMO_VARIANTS;
+}
+
 export function buildReachoutCadence(winner: AdVariant): ReachoutTouch[] {
   const hook = winner.headline;
   return [
@@ -217,6 +365,37 @@ export async function* demoScopeStream(
   };
 }
 
+function distributeCopyForKind(kind: DemoBriefKind) {
+  if (kind === "ai") {
+    return {
+      angles: "generic SaaS · time-back metric · founder voice…",
+      visuals: "dashboard UI · calendar chaos · warm founder desk…",
+      enrichment: "Enriching founders · LinkedIn + email · Series A–B",
+      reviseB: 'Revised: "Get 4 hours back from every week of meetings"',
+      designC: "Swapped dashboard → warm founder desk. Amber accents.",
+      finalC: 'Final: "Your cofounder stopped asking \'what did we decide?\'"',
+    };
+  }
+  if (kind === "run") {
+    return {
+      angles: "spec-sheet · race delta · dawn-loop lifestyle…",
+      visuals: "studio shoe · race clock · 6am urban loop…",
+      enrichment: "Enriching marathoners · Meta + Strava interests",
+      reviseB: 'Revised: "Shave 47 seconds off your half — without the hype tax"',
+      designC: "Swapped studio → dawn amber run. Warm lifestyle plate.",
+      finalC: 'Final: "Your 6am loop just got unfair"',
+    };
+  }
+  return {
+    angles: "eco-generic · impact-metric · lifestyle…",
+    visuals: "studio product · ocean texture · lifestyle commute…",
+    enrichment: "Enriching matched accounts · IG + FB · interest: sustainability",
+    reviseB: 'Revised: "This bottle saved 340 plastic units from the ocean"',
+    designC: "Swapped studio shot → lifestyle hiking image. Warm amber palette.",
+    finalC: 'Final: "Your morning coffee just got 10x greener"',
+  };
+}
+
 /** Stage 2 — Distribute work across agents, test variants, plan reach-out */
 export async function* demoDistributeStream(
   brief: string,
@@ -224,6 +403,9 @@ export async function* demoDistributeStream(
 ): AsyncGenerator<CampaignEvent> {
   void scope;
   const product = brief.trim() || "Sustainable water bottle, $35, millennials";
+  const kind = detectBriefKind(product);
+  const variants = variantsForBrief(product);
+  const copy = distributeCopyForKind(kind);
 
   yield {
     type: "system",
@@ -285,24 +467,21 @@ export async function* demoDistributeStream(
   yield {
     type: "subagent_output",
     role: "copywriter",
-    content:
-      "Drafting 3 headline angles: eco-generic · impact-metric · lifestyle…",
+    content: `Drafting 3 headline angles: ${copy.angles}`,
   };
   await sleep(320);
 
   yield {
     type: "subagent_output",
     role: "designer",
-    content:
-      "Composing visual concepts: studio product · ocean texture · lifestyle commute…",
+    content: `Composing visual concepts: ${copy.visuals}`,
   };
   await sleep(280);
 
   yield {
     type: "subagent_output",
     role: "media_buyer",
-    content:
-      "Enriching matched accounts · IG + FB · interest: sustainability",
+    content: copy.enrichment,
   };
   await sleep(240);
 
@@ -326,8 +505,8 @@ export async function* demoDistributeStream(
   await sleep(400);
   yield {
     type: "variant_ready",
-    variant: DEMO_VARIANTS[0],
-    message: `Fail · Variant A ${DEMO_VARIANTS[0].ctr}% CTR (need ≥${BENCHMARK_CTR}%)`,
+    variant: variants[0],
+    message: `Fail · Variant A ${variants[0].ctr}% CTR (need ≥${BENCHMARK_CTR}%)`,
   };
   await sleep(220);
 
@@ -342,7 +521,7 @@ export async function* demoDistributeStream(
   yield {
     type: "subagent_output",
     role: "copywriter",
-    content: 'Revised: "This bottle saved 340 plastic units from the ocean"',
+    content: copy.reviseB,
   };
   yield { type: "agent_idle", role: "copywriter" };
 
@@ -355,8 +534,8 @@ export async function* demoDistributeStream(
   await sleep(400);
   yield {
     type: "variant_ready",
-    variant: DEMO_VARIANTS[1],
-    message: `Fail · Variant B ${DEMO_VARIANTS[1].ctr}% CTR — close but under bar`,
+    variant: variants[1],
+    message: `Close · Variant B ${variants[1].ctr}% CTR — under ${BENCHMARK_CTR}% bar`,
   };
   await sleep(220);
 
@@ -371,7 +550,7 @@ export async function* demoDistributeStream(
   yield {
     type: "subagent_output",
     role: "designer",
-    content: "Swapped studio shot → lifestyle hiking image. Warm amber palette.",
+    content: copy.designC,
   };
   yield { type: "agent_idle", role: "designer" };
   yield { type: "agent_active", role: "copywriter" };
@@ -379,7 +558,7 @@ export async function* demoDistributeStream(
   yield {
     type: "subagent_output",
     role: "copywriter",
-    content: 'Final: "Your morning coffee just got 10x greener"',
+    content: copy.finalC,
   };
   yield { type: "agent_idle", role: "copywriter" };
 
@@ -392,12 +571,12 @@ export async function* demoDistributeStream(
   await sleep(450);
   yield {
     type: "variant_ready",
-    variant: DEMO_VARIANTS[2],
-    message: `Pass · Variant C ${DEMO_VARIANTS[2].ctr}% CTR — clears ${BENCHMARK_CTR}% bar`,
+    variant: variants[2],
+    message: `Pass · Variant C ${variants[2].ctr}% CTR — clears ${BENCHMARK_CTR}% bar`,
   };
   await sleep(180);
 
-  const reachout = buildReachoutCadence(DEMO_VARIANTS[2]);
+  const reachout = buildReachoutCadence(variants[2]);
   yield {
     type: "reachout_ready",
     reachout,
@@ -407,7 +586,7 @@ export async function* demoDistributeStream(
 
   yield {
     type: "complete",
-    variants: DEMO_VARIANTS,
+    variants,
     reachout,
     confidence: 94,
     message:

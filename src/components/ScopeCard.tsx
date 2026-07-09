@@ -68,7 +68,7 @@ export function ScopeCard({
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center space-y-5"
+        className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center space-y-5 pb-24"
       >
         <div className="space-y-2 text-center">
           <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber/80">
@@ -152,22 +152,26 @@ export function ScopeCard({
           </div>
         </div>
 
-        <button
-          type="button"
-          disabled={loading}
-          onClick={onConfirm}
-          className="group relative flex w-full items-center justify-center overflow-hidden rounded-2xl bg-amber px-4 py-3.5 text-[15px] font-semibold text-[#1a1408] transition hover:bg-amber-bright disabled:cursor-not-allowed disabled:opacity-45"
-        >
-          <span className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-60" />
-          <span className="relative">
-            {loading ? "Distributing…" : "Distribute the work"}
-          </span>
-        </button>
-
-        <p className="text-center text-[11px] text-muted/50">
-          Work will be assigned across copy, design, audience, gate, and video
-        </p>
       </motion.div>
+
+      <div className="sticky bottom-0 z-10 -mx-5 mt-auto border-t border-white/[0.04] bg-background/90 px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md">
+        <div className="mx-auto w-full max-w-lg space-y-2">
+          <button
+            type="button"
+            disabled={loading}
+            onClick={onConfirm}
+            className="group relative flex w-full items-center justify-center overflow-hidden rounded-2xl bg-amber px-4 py-3.5 text-[15px] font-semibold text-[#1a1408] transition hover:bg-amber-bright disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <span className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-60" />
+            <span className="relative">
+              {loading ? "Distributing…" : "Distribute the work"}
+            </span>
+          </button>
+          <p className="text-center text-[11px] text-muted/50">
+            Work will be assigned across copy, design, audience, gate, and video
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
