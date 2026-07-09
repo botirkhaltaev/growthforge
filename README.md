@@ -1,4 +1,4 @@
-# Growth Forge
+# Growth Forge (FRANK)
 
 GTM factory for the Cursor iOS London Hackathon.
 
