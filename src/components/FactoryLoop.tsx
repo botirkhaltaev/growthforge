@@ -102,6 +102,14 @@ export function inferLoopStep(opts: {
 
   const msg = statusMessage.toLowerCase();
   if (
+    msg.includes("producer") ||
+    msg.includes("video ad") ||
+    msg.includes("gemini-omni") ||
+    msg.includes("rendering video")
+  ) {
+    return "launch";
+  }
+  if (
     msg.includes("re-dispatch") ||
     msg.includes("revised") ||
     msg.includes("swapped") ||

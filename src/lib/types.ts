@@ -4,7 +4,8 @@ export type AgentRole =
   | "media_buyer"
   | "analyst"
   | "tester"
-  | "foreman";
+  | "foreman"
+  | "producer";
 
 export type CampaignEventType =
   | "system"
@@ -18,6 +19,8 @@ export type CampaignEventType =
   | "iteration"
   | "complete"
   | "error";
+
+export type VideoStatus = "idle" | "producing" | "ready" | "failed";
 
 export interface CampaignEvent {
   type: CampaignEventType;
@@ -50,6 +53,10 @@ export interface AdVariant {
   revenueForecast: number;
   verdict: "fail" | "close" | "pass";
   iterationNote: string;
+  /** FAL-generated vertical ad video URL (when Producer finishes) */
+  videoUrl?: string;
+  videoStatus?: VideoStatus;
+  videoRequestId?: string;
 }
 
 export interface CampaignBrief {
@@ -66,4 +73,5 @@ export interface AgentActivity {
   media_buyer: boolean;
   analyst: boolean;
   tester: boolean;
+  producer: boolean;
 }

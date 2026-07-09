@@ -18,7 +18,7 @@ export function TrustOverlay({
   open,
   variants,
   confidence,
-  agentCount = 4,
+  agentCount = 5,
   forging = false,
   onClose,
   onKill,
