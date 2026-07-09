@@ -265,7 +265,9 @@ export async function* demoDistributeStream(
       task: a.task,
       message: `${a.task} → ${a.role.replace("_", " ")}`,
     };
-    await sleep(220);
+    yield { type: "agent_active", role: a.role };
+    await sleep(320);
+    yield { type: "agent_idle", role: a.role };
   }
 
   for (const a of agents) {

@@ -49,6 +49,7 @@ export function ForgeCanvas({
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartX = useRef<number | null>(null);
   const didSwipe = useRef(false);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   const variant = variants[activeIndex] ?? variants[variants.length - 1];
   const showSkeleton = distributing && !variant;
@@ -104,6 +105,10 @@ export function ForgeCanvas({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [goPrev, goNext, trustOpen]);
+
+  useEffect(() => {
+    canvasRef.current?.focus({ preventScroll: true });
+  }, []);
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -195,7 +200,10 @@ export function ForgeCanvas({
           <button
             type="button"
             onClick={() => setTrustOpen(true)}
-            className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 font-mono text-[10px] tracking-wide text-muted transition hover:border-amber/30 hover:text-amber-bright"
+            className={cn(
+              "rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 font-mono text-[10px] tracking-wide text-muted transition hover:border-amber/30 hover:text-amber-bright",
+              ready && hasPass && "loop-pulse border-amber/35 text-amber-bright"
+            )}
           >
             Gate{confidence > 0 ? ` · ${confidence}%` : ""}
           </button>
@@ -238,6 +246,7 @@ export function ForgeCanvas({
       </div>
 
       <div
+        ref={canvasRef}
         className="relative flex min-h-0 flex-1 flex-col justify-center px-4 py-2 select-none outline-none"
         tabIndex={0}
         onTouchStart={onTouchStart}
@@ -335,7 +344,16 @@ export function ForgeCanvas({
                     "relative flex h-7 min-w-7 items-center justify-center rounded-full px-2 font-mono text-[11px] font-medium transition",
                     i === activeIndex
                       ? "bg-amber text-[#1a1408]"
-                      : "bg-white/[0.06] text-muted hover:bg-white/10"
+                      : "bg-white/[0.06] text-muted hover:bg-white/10",
+                    i === activeIndex &&
+                      v.verdict === "pass" &&
+                      "ring-2 ring-pass/55",
+                    i === activeIndex &&
+                      v.verdict === "close" &&
+                      "ring-2 ring-close/55",
+                    i === activeIndex &&
+                      v.verdict === "fail" &&
+                      "ring-2 ring-fail/55"
                   )}
                 >
                   {v.label}
@@ -403,8 +421,8 @@ export function ForgeCanvas({
 
         <p className="text-center text-[10px] text-muted/45">
           {distributing
-            ? "Hold for gate · Kill switch inside"
-            : "Swipe to compare · Hold for distribution gate"}
+            ? "Hold creative or tap Gate · Kill switch inside"
+            : "Swipe to compare · Tap Gate or hold creative"}
         </p>
       </footer>
     </div>

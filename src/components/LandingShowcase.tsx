@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { AdCreative } from "@/components/AdCreative";
 import { DEMO_VARIANTS } from "@/lib/demo-data";
@@ -27,6 +28,18 @@ const fadeUp = {
 };
 
 export function LandingShowcase() {
+  const winnerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const mobile = window.matchMedia("(max-width: 639px)").matches;
+    if (!mobile || !winnerRef.current) return;
+    winnerRef.current.scrollIntoView({
+      inline: "center",
+      block: "nearest",
+      behavior: "instant" as ScrollBehavior,
+    });
+  }, []);
+
   return (
     <section id="showcase" className="relative px-5 py-24 pb-28 sm:py-32 sm:pb-32">
       <div className="mx-auto max-w-6xl">
@@ -61,13 +74,14 @@ export function LandingShowcase() {
         </motion.div>
 
         <p className="mb-4 text-center font-mono text-[10px] uppercase tracking-widest text-muted/50 sm:hidden">
-          Swipe to compare · winner highlighted
+          Swipe to compare · winner centered
         </p>
 
         <div className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-3 scrollbar-none sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:pb-0 lg:gap-6">
           {DEMO_VARIANTS.map((variant, i) => (
             <motion.div
               key={variant.id}
+              ref={variant.verdict === "pass" ? winnerRef : undefined}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-60px" }}

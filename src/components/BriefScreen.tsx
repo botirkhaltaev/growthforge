@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { FactoryLoop } from "./FactoryLoop";
 
@@ -35,6 +35,15 @@ export function BriefScreen({
   errorMessage,
 }: BriefScreenProps) {
   const [brief, setBrief] = useState(PLACEHOLDER);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    // Desktop presenters get focus; mobile keeps keyboard closed for the first beat
+    const finePointer = window.matchMedia(
+      "(hover: hover) and (pointer: fine)"
+    ).matches;
+    if (finePointer) textareaRef.current?.focus();
+  }, []);
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center px-5 py-14">
@@ -91,6 +100,7 @@ export function BriefScreen({
             Product brief
           </label>
           <textarea
+            ref={textareaRef}
             id="brief"
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
@@ -105,7 +115,6 @@ export function BriefScreen({
             className="w-full resize-none rounded-2xl border border-white/[0.07] bg-surface/80 px-5 py-4 text-[15px] leading-relaxed text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition placeholder:text-muted/50 focus:border-amber/35 focus:bg-surface-elevated"
             placeholder={PLACEHOLDER}
             disabled={loading}
-            autoFocus
           />
 
           <div className="flex flex-wrap items-center justify-center gap-2">
