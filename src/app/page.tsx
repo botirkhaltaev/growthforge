@@ -1,350 +1,111 @@
-"use client";
+import Link from "next/link";
+import { LandingHero } from "@/components/LandingHero";
+import { LandingShowcase } from "@/components/LandingShowcase";
 
-import { useCallback, useRef, useState } from "react";
-import { BriefScreen } from "@/components/BriefScreen";
-import { ForgeCanvas } from "@/components/ForgeCanvas";
-import type {
-  AdVariant,
-  AgentActivity,
-  CampaignEvent,
-  ForgePhase,
-} from "@/lib/types";
+const LOOP_STEPS = [
+  { label: "Create", color: "text-foreground/70" },
+  { label: "Test", color: "text-foreground/70" },
+  { label: "Iterate", color: "text-close" },
+  { label: "Launch", color: "text-pass" },
+] as const;
 
-const IDLE_ACTIVITY: AgentActivity = {
-  copywriter: false,
-  designer: false,
-  media_buyer: false,
-  analyst: false,
-  tester: false,
-  producer: false,
-};
+const AGENTS = [
+  { role: "Copywriter", task: "Messaging & hooks" },
+  { role: "Designer", task: "Creative direction" },
+  { role: "Media Buyer", task: "Channel targeting" },
+  { role: "Analyst", task: "CTR & ROAS gates" },
+] as const;
 
-const VIDEO_POLL_MS = 3000;
-const VIDEO_TIMEOUT_MS = 180_000;
-
-export default function Home() {
-  const [phase, setPhase] = useState<ForgePhase>("brief");
-  const [variants, setVariants] = useState<AdVariant[]>([]);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [activity, setActivity] = useState<AgentActivity>(IDLE_ACTIVITY);
-  const [statusMessage, setStatusMessage] = useState("");
-  const [confidence, setConfidence] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
-  const briefRef = useRef("");
-  const videoAbortRef = useRef<AbortController | null>(null);
-  const videoStartedForRef = useRef<string | null>(null);
-
-  const setRoleActive = (role: string, active: boolean) => {
-    setActivity((prev) => {
-      if (!(role in prev)) return prev;
-      return { ...prev, [role]: active };
-    });
-  };
-
-  const patchVariant = useCallback(
-    (id: string, patch: Partial<AdVariant>) => {
-      setVariants((prev) =>
-        prev.map((v) => (v.id === id ? { ...v, ...patch } : v))
-      );
-    },
-    []
-  );
-
-  const produceVideo = useCallback(
-    async (variant: AdVariant, brief: string) => {
-      if (videoStartedForRef.current === variant.id) return;
-      videoStartedForRef.current = variant.id;
-
-      videoAbortRef.current?.abort();
-      const controller = new AbortController();
-      videoAbortRef.current = controller;
-
-      setRoleActive("producer", true);
-      patchVariant(variant.id, { videoStatus: "producing" });
-      setStatusMessage("Producer rendering video ad…");
-
-      try {
-        const submitRes = await fetch("/api/video", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ brief, variant }),
-          signal: controller.signal,
-        });
-
-        const submitJson = (await submitRes.json()) as {
-          requestId?: string;
-          error?: string;
-        };
-
-        if (!submitRes.ok || !submitJson.requestId) {
-          throw new Error(submitJson.error || "Video submit failed");
-        }
-
-        const requestId = submitJson.requestId;
-        patchVariant(variant.id, { videoRequestId: requestId });
-        setStatusMessage("Producer queued on fal · gemini-omni-flash…");
-
-        const started = Date.now();
-        while (Date.now() - started < VIDEO_TIMEOUT_MS) {
-          if (controller.signal.aborted) return;
-
-          await new Promise((r) => setTimeout(r, VIDEO_POLL_MS));
-          if (controller.signal.aborted) return;
-
-          const statusRes = await fetch(
-            `/api/video?requestId=${encodeURIComponent(requestId)}`,
-            { signal: controller.signal }
-          );
-          const statusJson = (await statusRes.json()) as {
-            status?: string;
-            videoUrl?: string;
-            error?: string;
-            queuePosition?: number;
-          };
-
-          if (!statusRes.ok) {
-            throw new Error(statusJson.error || "Video status failed");
-          }
-
-          if (statusJson.status === "COMPLETED" && statusJson.videoUrl) {
-            patchVariant(variant.id, {
-              videoUrl: statusJson.videoUrl,
-              videoStatus: "ready",
-            });
-            setRoleActive("producer", false);
-            setStatusMessage("Video ad ready · tap to unmute");
-            return;
-          }
-
-          if (statusJson.status === "FAILED") {
-            throw new Error(statusJson.error || "Video generation failed");
-          }
-
-          const pos =
-            typeof statusJson.queuePosition === "number"
-              ? ` · queue #${statusJson.queuePosition}`
-              : "";
-          setStatusMessage(
-            `Producer ${String(statusJson.status ?? "IN_PROGRESS").toLowerCase()}${pos}…`
-          );
-        }
-
-        throw new Error("Video generation timed out");
-      } catch (err) {
-        if ((err as Error).name === "AbortError") return;
-        console.error("[growthforge] produceVideo", err);
-        patchVariant(variant.id, { videoStatus: "failed" });
-        setRoleActive("producer", false);
-        setStatusMessage(
-          err instanceof Error
-            ? `Video unavailable — ${err.message}`
-            : "Video unavailable — using static creative"
-        );
-      }
-    },
-    [patchVariant]
-  );
-
-  const handleEvent = useCallback(
-    (event: CampaignEvent) => {
-      switch (event.type) {
-        case "system":
-        case "tester":
-        case "iteration":
-          if (event.message) setStatusMessage(event.message);
-          break;
-        case "agent_created":
-        case "vm_spawned":
-          if (event.message) setStatusMessage(event.message);
-          break;
-        case "agent_active":
-          if (event.role) setRoleActive(event.role, true);
-          break;
-        case "agent_idle":
-          if (event.role) setRoleActive(event.role, false);
-          break;
-        case "subagent_output":
-          if (event.content) setStatusMessage(event.content.slice(0, 80));
-          if (event.role) setRoleActive(event.role, true);
-          break;
-        case "variant_ready":
-          if (event.variant) {
-            setVariants((prev) => {
-              const next = [
-                ...prev.filter((v) => v.id !== event.variant!.id),
-                event.variant!,
-              ];
-              next.sort((a, b) => a.label.localeCompare(b.label));
-              return next;
-            });
-            setActiveIndex((prev) => {
-              return event.variant
-                ? ["A", "B", "C"].indexOf(event.variant.label)
-                : prev;
-            });
-            if (event.message) setStatusMessage(event.message);
-
-            // Kick off Producer as soon as a passing variant lands
-            if (event.variant.verdict === "pass") {
-              void produceVideo(event.variant, briefRef.current);
-            }
-          }
-          break;
-        case "complete":
-          if (event.variants) {
-            setVariants((prev) => {
-              // Preserve any in-flight video fields already patched onto variants
-              const byId = new Map(prev.map((v) => [v.id, v]));
-              return event.variants!.map((v) => {
-                const existing = byId.get(v.id);
-                if (!existing) return v;
-                return {
-                  ...v,
-                  videoUrl: existing.videoUrl,
-                  videoStatus: existing.videoStatus,
-                  videoRequestId: existing.videoRequestId,
-                };
-              });
-            });
-            const passIdx = event.variants.findIndex((v) => v.verdict === "pass");
-            setActiveIndex(passIdx >= 0 ? passIdx : event.variants.length - 1);
-
-            const winner = event.variants.find((v) => v.verdict === "pass");
-            if (winner) {
-              void produceVideo(winner, briefRef.current);
-            }
-          }
-          if (event.confidence) setConfidence(event.confidence);
-          if (event.message) setStatusMessage(event.message);
-          setActivity((prev) => ({
-            ...IDLE_ACTIVITY,
-            producer: prev.producer,
-          }));
-          setPhase("ready");
-          setLoading(false);
-          break;
-        case "error":
-          if (event.message) setStatusMessage(event.message);
-          break;
-      }
-    },
-    [produceVideo]
-  );
-
-  const forge = async (brief: string) => {
-    abortRef.current?.abort();
-    videoAbortRef.current?.abort();
-    videoStartedForRef.current = null;
-    const controller = new AbortController();
-    abortRef.current = controller;
-    briefRef.current = brief;
-
-    setLoading(true);
-    setPhase("forging");
-    setVariants([]);
-    setActiveIndex(0);
-    setActivity(IDLE_ACTIVITY);
-    setConfidence(0);
-    setStatusMessage("Connecting to agents…");
-
-    try {
-      const res = await fetch("/api/campaign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brief }),
-        signal: controller.signal,
-      });
-
-      if (!res.ok || !res.body) {
-        throw new Error(`Campaign failed (${res.status})`);
-      }
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const chunks = buffer.split("\n\n");
-        buffer = chunks.pop() ?? "";
-
-        for (const chunk of chunks) {
-          const line = chunk
-            .split("\n")
-            .find((l) => l.startsWith("data: "));
-          if (!line) continue;
-          try {
-            const event = JSON.parse(line.slice(6)) as CampaignEvent;
-            handleEvent(event);
-          } catch {
-            // ignore malformed SSE
-          }
-        }
-      }
-    } catch (err) {
-      if ((err as Error).name === "AbortError") {
-        setStatusMessage("Agents halted.");
-        setPhase(variants.length ? "ready" : "brief");
-      } else {
-        setStatusMessage(
-          err instanceof Error ? err.message : "Something went wrong"
-        );
-        setPhase("brief");
-      }
-    } finally {
-      setLoading(false);
-      setActivity((prev) => ({
-        ...IDLE_ACTIVITY,
-        producer: prev.producer,
-      }));
-    }
-  };
-
-  const onKill = () => {
-    abortRef.current?.abort();
-    videoAbortRef.current?.abort();
-    setActivity(IDLE_ACTIVITY);
-    setStatusMessage("Kill switch — agents halted.");
-  };
-
-  const onDeploy = () => {
-    setPhase("deployed");
-    setStatusMessage("Live on Meta · Facebook + Instagram");
-  };
-
-  const onReset = () => {
-    abortRef.current?.abort();
-    videoAbortRef.current?.abort();
-    videoStartedForRef.current = null;
-    setPhase("brief");
-    setVariants([]);
-    setActiveIndex(0);
-    setActivity(IDLE_ACTIVITY);
-    setConfidence(0);
-    setStatusMessage("");
-    setLoading(false);
-  };
-
-  if (phase === "brief") {
-    return <BriefScreen onSubmit={forge} loading={loading} />;
-  }
-
+export default function LandingPage() {
   return (
-    <ForgeCanvas
-      variants={variants}
-      activeIndex={Math.min(activeIndex, Math.max(0, variants.length - 1))}
-      onIndexChange={setActiveIndex}
-      activity={activity}
-      statusMessage={statusMessage}
-      confidence={confidence || (phase === "ready" || phase === "deployed" ? 94 : 0)}
-      forging={phase === "forging"}
-      deployed={phase === "deployed"}
-      onDeploy={onDeploy}
-      onKill={onKill}
-      onReset={onReset}
-    />
+    <main>
+      <LandingHero />
+
+      <section
+        id="how-it-works"
+        className="border-y border-white/[0.06] px-5 py-20 sm:py-24"
+      >
+        <div className="mx-auto max-w-4xl space-y-10 text-center">
+          <div className="space-y-3">
+            <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber/80">
+              GTM factory
+            </p>
+            <h2 className="font-display text-balance text-[2rem] leading-[1.12] tracking-tight sm:text-3xl">
+              Create → test → iterate → launch
+            </h2>
+            <p className="mx-auto max-w-lg text-[15px] leading-relaxed text-muted">
+              Same stage-gate discipline as a go-to-market motion — applied to
+              creative. Agents don&apos;t stop at the first draft.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 font-mono text-[12px] sm:text-[13px]">
+            {LOOP_STEPS.map((step, i) => (
+              <span key={step.label} className="flex items-center gap-3">
+                <span className={step.color}>{step.label}</span>
+                {i < LOOP_STEPS.length - 1 && (
+                  <span className="text-muted/40">→</span>
+                )}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <LandingShowcase />
+
+      <section className="px-5 py-20 sm:py-24">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-12 space-y-3 text-center">
+            <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber/80">
+              Factory stations
+            </p>
+            <h2 className="font-display text-balance text-[2rem] leading-[1.12] tracking-tight sm:text-3xl">
+              Parallel specialists, one creative
+            </h2>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {AGENTS.map((agent) => (
+              <div
+                key={agent.role}
+                className="rounded-2xl border border-white/[0.07] bg-surface/60 px-5 py-6 text-center"
+              >
+                <p className="font-display text-lg text-amber-bright">
+                  {agent.role}
+                </p>
+                <p className="mt-2 text-[13px] text-muted">{agent.task}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 pb-24 pt-8">
+        <div className="mx-auto max-w-2xl space-y-8 text-center">
+          <div className="space-y-4">
+            <h2 className="font-display text-balance text-[2rem] leading-[1.12] tracking-tight sm:text-3xl">
+              Ready to run the factory?
+            </h2>
+            <p className="text-[15px] leading-relaxed text-muted">
+              Enter a product brief and watch four agents iterate until the
+              creative clears the launch gate.
+            </p>
+          </div>
+
+          <Link
+            href="/forge"
+            className="group relative inline-flex items-center justify-center overflow-hidden rounded-2xl bg-amber px-10 py-3.5 text-[15px] font-semibold text-[#1a1408] transition hover:bg-amber-bright"
+          >
+            <span className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-60" />
+            <span className="relative">Run GTM Factory</span>
+          </Link>
+
+          <p className="font-mono text-[11px] tracking-wide text-muted/50">
+            Built with @cursor/sdk · parallel agents · generative UI
+          </p>
+        </div>
+      </section>
+    </main>
   );
 }

@@ -22,12 +22,13 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Growth Forge — Multi-agent marketing studio",
+  title: "Growth Forge — GTM factory for ads",
   description:
-    "Four Cursor agents forge, test, and iterate ad creative until it wins. The creative is the interface.",
+    "Create → test → iterate → launch. Four Cursor agents forge go-to-market creative until it clears the CTR gate. The creative is the interface.",
   openGraph: {
     title: "Growth Forge",
-    description: "Software factory for growth marketing. Built with @cursor/sdk.",
+    description:
+      "GTM factory for growth marketing — create, test, iterate, launch. Built with @cursor/sdk.",
   },
 };
 
