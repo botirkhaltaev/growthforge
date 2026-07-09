@@ -95,9 +95,10 @@ export default function ForgePage() {
       const controller = new AbortController();
       videoAbortRef.current = controller;
 
+      // Background job — never blocks Approve → reach-out.
+      // Progress lives on the Video pill, not the main status line.
       setRoleActive("producer", true);
       patchVariant(variant.id, { videoStatus: "producing" });
-      setStatusMessage("Producer rendering video ad…");
 
       try {
         const submitRes = await fetch("/api/video", {
@@ -118,7 +119,6 @@ export default function ForgePage() {
 
         const requestId = submitJson.requestId;
         patchVariant(variant.id, { videoRequestId: requestId });
-        setStatusMessage("Producer queued on fal · gemini-omni-flash…");
 
         const started = Date.now();
         while (Date.now() - started < VIDEO_TIMEOUT_MS) {
@@ -135,7 +135,6 @@ export default function ForgePage() {
             status?: string;
             videoUrl?: string;
             error?: string;
-            queuePosition?: number;
           };
 
           if (!statusRes.ok) {
@@ -148,21 +147,23 @@ export default function ForgePage() {
               videoStatus: "ready",
             });
             setRoleActive("producer", false);
-            setStatusMessage("Video ad ready · tap to unmute");
+            setStatusMessage((prev) => {
+              const p = prev.toLowerCase();
+              if (
+                p.includes("live ·") ||
+                p.includes("reach-out") ||
+                p.includes("planning reach")
+              ) {
+                return prev;
+              }
+              return "Video ad ready · tap to unmute";
+            });
             return;
           }
 
           if (statusJson.status === "FAILED") {
             throw new Error(statusJson.error || "Video generation failed");
           }
-
-          const pos =
-            typeof statusJson.queuePosition === "number"
-              ? ` · queue #${statusJson.queuePosition}`
-              : "";
-          setStatusMessage(
-            `Producer ${String(statusJson.status ?? "IN_PROGRESS").toLowerCase()}${pos}…`
-          );
         }
 
         throw new Error("Video generation timed out");
@@ -171,17 +172,22 @@ export default function ForgePage() {
         console.error("[growthforge] produceVideo", err);
         patchVariant(variant.id, { videoStatus: "failed" });
         setRoleActive("producer", false);
-        const detail =
-          err instanceof Error ? err.message : "using static creative";
-        setStatusMessage(
-          detail.toLowerCase().includes("fal_key")
-            ? "Distribution gate open · continuing with static creative"
-            : `Video unavailable — ${detail}`
-        );
+        // Keep campaign status; Video pill shows failure
       }
     },
     [patchVariant]
   );
+
+  /** Unlock Approve as soon as a variant passes — video keeps rendering in background. */
+  const unlockDistribute = useCallback((message?: string) => {
+    setPhase("ready");
+    setLoading(false);
+    setActivity((prev) => ({
+      ...IDLE_ACTIVITY,
+      producer: prev.producer,
+    }));
+    if (message) setStatusMessage(message);
+  }, []);
 
   const handleEvent = useCallback(
     (event: CampaignEvent) => {
@@ -222,15 +228,21 @@ export default function ForgePage() {
               next.sort((a, b) => a.label.localeCompare(b.label));
               return next;
             });
-            setActiveIndex((prev) => {
-              return event.variant
+            setActiveIndex(() =>
+              event.variant
                 ? ["A", "B", "C"].indexOf(event.variant.label)
-                : prev;
-            });
-            if (event.message) setStatusMessage(event.message);
+                : 0
+            );
 
             if (event.variant.verdict === "pass") {
+              // Unlock reach-out gate immediately; Producer runs in background
+              unlockDistribute(
+                event.message ||
+                  "Gate cleared · video rendering in background"
+              );
               void produceVideo(event.variant, briefRef.current);
+            } else if (event.message) {
+              setStatusMessage(event.message);
             }
           }
           break;
@@ -265,32 +277,16 @@ export default function ForgePage() {
           }
           if (event.reachout) setReachout(event.reachout);
           if (event.confidence) setConfidence(event.confidence);
-          if (event.message) {
-            setStatusMessage((prev) => {
-              const p = prev.toLowerCase();
-              if (
-                p.includes("continuing with static") ||
-                p.includes("video unavailable") ||
-                p.includes("video ad ready")
-              ) {
-                return prev;
-              }
-              return event.message!;
-            });
-          }
-          setActivity((prev) => ({
-            ...IDLE_ACTIVITY,
-            producer: prev.producer,
-          }));
-          setPhase("ready");
-          setLoading(false);
+          unlockDistribute(
+            event.message || "Distribution complete · ready for reach-out"
+          );
           break;
         case "error":
           if (event.message) setStatusMessage(event.message);
           break;
       }
     },
-    [produceVideo]
+    [produceVideo, unlockDistribute]
   );
 
   const runScope = async (nextBrief: string) => {
@@ -419,10 +415,15 @@ export default function ForgePage() {
   };
 
   const onKill = () => {
+    // Halt distribution agents only — leave background video rendering
     abortRef.current?.abort();
-    videoAbortRef.current?.abort();
-    setActivity(IDLE_ACTIVITY);
-    setStatusMessage("Kill switch — agents halted.");
+    setActivity((prev) => ({
+      ...IDLE_ACTIVITY,
+      producer: prev.producer,
+    }));
+    setPhase((p) => (p === "distributing" ? "ready" : p));
+    setLoading(false);
+    setStatusMessage("Kill switch — agents halted. Video still rendering…");
   };
 
   const onApproveReachout = () => {

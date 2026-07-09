@@ -32,6 +32,33 @@ const AGENT_LABELS: { key: keyof AgentActivity; label: string }[] = [
   { key: "producer", label: "Video" },
 ];
 
+type PillState = "idle" | "working" | "generating" | "ready" | "failed";
+
+function agentPillState(
+  key: keyof AgentActivity,
+  activity: AgentActivity,
+  opts: {
+    distributing: boolean;
+    hasVariants: boolean;
+    hasPass: boolean;
+    videoStatus?: AdVariant["videoStatus"];
+    hasVideoUrl?: boolean;
+  }
+): PillState {
+  if (key === "producer") {
+    if (opts.hasVideoUrl || opts.videoStatus === "ready") return "ready";
+    if (opts.videoStatus === "failed") return "failed";
+    if (activity.producer || opts.videoStatus === "producing") {
+      return "generating";
+    }
+    return opts.hasPass ? "generating" : "idle";
+  }
+
+  if (activity[key]) return "working";
+  if (opts.hasVariants && (!opts.distributing || opts.hasPass)) return "ready";
+  return "idle";
+}
+
 export function ForgeCanvas({
   variants,
   activeIndex,
@@ -134,28 +161,29 @@ export function ForgeCanvas({
   const videoBusy =
     activity.producer ||
     passVariant?.videoStatus === "producing" ||
-    variant?.videoStatus === "producing";
+    (hasPass &&
+      !passVariant?.videoUrl &&
+      passVariant?.videoStatus !== "failed" &&
+      passVariant?.videoStatus !== "ready");
+
+  // Pass unlocks Approve even while video still renders in background
+  const workflowUnlocked = ready || hasPass;
 
   const ctaLabel = (() => {
-    if (distributing) return "Distributing work…";
-    if (videoBusy && (variant?.verdict === "pass" || hasPass)) {
-      return "Rendering video…";
-    }
+    if (distributing && !hasPass) return "Distributing work…";
     if (variant?.verdict === "pass") return "Approve → plan reach-out";
     if (hasPass) return `Jump to winner · Variant ${passVariant?.label}`;
     return "Waiting for a gate-ready variant…";
   })();
 
   const canJumpToWinner =
+    workflowUnlocked &&
     !distributing &&
-    !videoBusy &&
-    ready &&
     hasPass &&
     variant?.verdict !== "pass";
   const canApprove =
+    workflowUnlocked &&
     !distributing &&
-    !videoBusy &&
-    ready &&
     variant?.verdict === "pass";
   const ctaDisabled = !canApprove && !canJumpToWinner;
 
@@ -225,24 +253,74 @@ export function ForgeCanvas({
         />
       </div>
 
-      <div className="flex min-h-7 flex-wrap items-center justify-center gap-1 px-5 py-0.5">
-        {anyActive
-          ? AGENT_LABELS.filter(({ key }) => activity[key]).map(
-              ({ key, label }) => (
-                <span
-                  key={key}
-                  className="rounded-full bg-amber/15 px-2 py-0.5 font-mono text-[10px] tracking-wide text-amber-bright ring-1 ring-amber/30"
-                >
-                  {label}
-                  <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-bright" />
-                </span>
-              )
-            )
-          : distributing && (
-              <span className="font-mono text-[10px] text-muted/40">
-                Work distributed across agents…
+      {/* Agent strip — all pills visible; Video signals generating → ready */}
+      <div className="flex flex-col items-center gap-1 px-5 py-0.5">
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
+          {AGENT_LABELS.map(({ key, label }) => {
+            const state = agentPillState(key, activity, {
+              distributing,
+              hasVariants: variants.length > 0,
+              hasPass,
+              videoStatus: passVariant?.videoStatus,
+              hasVideoUrl: Boolean(passVariant?.videoUrl),
+            });
+
+            return (
+              <span
+                key={key}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] tracking-wide transition",
+                  state === "idle" && "text-muted/40",
+                  state === "working" &&
+                    "bg-amber/15 text-amber-bright ring-1 ring-amber/30",
+                  state === "generating" &&
+                    "pill-generating bg-amber/20 text-amber-bright ring-1 ring-amber/45",
+                  state === "ready" &&
+                    "pill-ready bg-pass/15 text-pass ring-1 ring-pass/35",
+                  state === "failed" &&
+                    "bg-fail/10 text-fail/80 ring-1 ring-fail/25"
+                )}
+                title={
+                  key === "producer"
+                    ? state === "generating"
+                      ? "Video generating…"
+                      : state === "ready"
+                        ? "Video ready to view"
+                        : state === "failed"
+                          ? "Video unavailable"
+                          : "Waiting for a passing variant"
+                    : undefined
+                }
+              >
+                {label}
+                {state === "working" && (
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-bright" />
+                )}
+                {state === "generating" && (
+                  <span className="forge-ring inline-block h-2.5 w-2.5 rounded-full border border-amber/30 border-t-amber" />
+                )}
+                {state === "ready" && (
+                  <span className="text-[9px] leading-none" aria-hidden>
+                    ✓
+                  </span>
+                )}
               </span>
-            )}
+            );
+          })}
+        </div>
+        {passVariant?.videoStatus === "producing" || activity.producer ? (
+          <p className="font-mono text-[9px] tracking-wide text-amber/70">
+            Video generating…
+          </p>
+        ) : passVariant?.videoUrl || passVariant?.videoStatus === "ready" ? (
+          <p className="font-mono text-[9px] tracking-wide text-pass/80">
+            Video ready to view
+          </p>
+        ) : passVariant?.videoStatus === "failed" ? (
+          <p className="font-mono text-[9px] tracking-wide text-fail/70">
+            Video unavailable — static creative
+          </p>
+        ) : null}
       </div>
 
       <div
@@ -420,9 +498,11 @@ export function ForgeCanvas({
         </button>
 
         <p className="text-center text-[10px] text-muted/45">
-          {distributing
+          {distributing && !hasPass
             ? "Hold creative or tap Gate · Kill switch inside"
-            : "Swipe to compare · Tap Gate or hold creative"}
+            : videoBusy
+              ? "Video rendering in background · swipe & approve anytime"
+              : "Swipe to compare · Tap Gate or hold creative"}
         </p>
       </footer>
     </div>
