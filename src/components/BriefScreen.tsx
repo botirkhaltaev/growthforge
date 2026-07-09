@@ -1,9 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { FactoryLoop } from "./FactoryLoop";
+import { cn } from "@/lib/utils";
 
 interface BriefScreenProps {
   onSubmit: (brief: string) => void;
@@ -11,39 +18,194 @@ interface BriefScreenProps {
   errorMessage?: string;
 }
 
-const PLACEHOLDER =
-  "Sustainable water bottle, $35, eco-conscious millennials 25–35";
+type Goal = "Conversions" | "Clicks" | "Awareness";
+
+interface WizardData {
+  product: string;
+  price: string;
+  audience: string;
+  goal: Goal;
+  notes: string;
+  composedBrief: string;
+}
+
+const STEPS = ["Product", "Audience", "Goal", "Review"] as const;
+const GOALS: Goal[] = ["Conversions", "Clicks", "Awareness"];
+
+const DEFAULTS: WizardData = {
+  product: "Sustainable water bottle",
+  price: "$35",
+  audience: "eco-conscious millennials 25–35",
+  goal: "Conversions",
+  notes: "",
+  composedBrief: "",
+};
 
 const EXAMPLES = [
   {
     label: "Eco bottle",
-    brief: "Sustainable water bottle, $35, eco-conscious millennials 25–35",
+    data: {
+      product: "Sustainable water bottle",
+      price: "$35",
+      audience: "eco-conscious millennials 25–35",
+      goal: "Conversions" as Goal,
+      notes: "",
+    },
   },
   {
     label: "AI notes",
-    brief: "AI meeting notes app, $12/mo, remote startup founders",
+    data: {
+      product: "AI meeting notes app",
+      price: "$12/mo",
+      audience: "remote startup founders",
+      goal: "Conversions" as Goal,
+      notes: "",
+    },
   },
   {
     label: "Run club",
-    brief: "Carbon-plate running shoes, $180, urban marathoners 28–40",
+    data: {
+      product: "Carbon-plate running shoes",
+      price: "$180",
+      audience: "urban marathoners 28–40",
+      goal: "Clicks" as Goal,
+      notes: "",
+    },
   },
 ];
+
+const STEP_COPY: Record<
+  number,
+  { eyebrow: string; title: ReactNode; subtitle: string }
+> = {
+  0: {
+    eyebrow: "GTM factory",
+    title: (
+      <>
+        What are you{" "}
+        <em className="not-italic text-amber-bright">selling?</em>
+      </>
+    ),
+    subtitle:
+      "Start with the product. Agents will scope ICP and signals from here.",
+  },
+  1: {
+    eyebrow: "Audience",
+    title: (
+      <>
+        Who is it{" "}
+        <em className="not-italic text-amber-bright">for?</em>
+      </>
+    ),
+    subtitle: "Describe the ICP in plain language — role, age, mindset.",
+  },
+  2: {
+    eyebrow: "Objective",
+    title: (
+      <>
+        What&apos;s the{" "}
+        <em className="not-italic text-amber-bright">goal?</em>
+      </>
+    ),
+    subtitle: "Pick the outcome the campaign should optimize for.",
+  },
+  3: {
+    eyebrow: "Review",
+    title: (
+      <>
+        Ready to{" "}
+        <em className="not-italic text-amber-bright">forge</em>
+      </>
+    ),
+    subtitle: "Tweak the brief if needed, then scope the go-to-market.",
+  },
+};
+
+function composeBrief(data: WizardData): string {
+  const parts = [
+    data.product.trim(),
+    data.price.trim(),
+    data.audience.trim(),
+  ].filter(Boolean);
+
+  let brief = parts.join(", ");
+  if (data.goal) brief += `. Goal: ${data.goal}`;
+  if (data.notes.trim()) brief += `. ${data.notes.trim()}`;
+  return brief;
+}
+
+const inputClass =
+  "w-full rounded-2xl border border-white/[0.07] bg-surface/80 px-5 py-4 text-[15px] leading-relaxed text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition placeholder:text-muted/50 focus:border-amber/35 focus:bg-surface-elevated disabled:opacity-60";
 
 export function BriefScreen({
   onSubmit,
   loading,
   errorMessage,
 }: BriefScreenProps) {
-  const [brief, setBrief] = useState(PLACEHOLDER);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [data, setData] = useState<WizardData>(DEFAULTS);
+  const [briefTouched, setBriefTouched] = useState(false);
+  const productRef = useRef<HTMLInputElement>(null);
+  const audienceRef = useRef<HTMLInputElement>(null);
+  const notesRef = useRef<HTMLInputElement>(null);
+  const briefRef = useRef<HTMLTextAreaElement>(null);
+
+  const autoBrief = useMemo(() => composeBrief(data), [data]);
+  const reviewBrief = briefTouched ? data.composedBrief : autoBrief;
 
   useEffect(() => {
-    // Desktop presenters get focus; mobile keeps keyboard closed for the first beat
     const finePointer = window.matchMedia(
       "(hover: hover) and (pointer: fine)"
     ).matches;
-    if (finePointer) textareaRef.current?.focus();
-  }, []);
+    if (!finePointer) return;
+    const id = window.setTimeout(() => {
+      if (step === 0) productRef.current?.focus();
+      else if (step === 1) audienceRef.current?.focus();
+      else if (step === 2) notesRef.current?.focus();
+      else briefRef.current?.focus();
+    }, 280);
+    return () => window.clearTimeout(id);
+  }, [step]);
+
+  const canAdvance = (() => {
+    if (step === 0) return data.product.trim().length > 0;
+    if (step === 1) return data.audience.trim().length > 0;
+    if (step === 2) return true;
+    return reviewBrief.trim().length > 0;
+  })();
+
+  const goTo = (next: number) => {
+    setDirection(next > step ? 1 : -1);
+    setStep(next);
+  };
+
+  const goNext = () => {
+    if (!canAdvance || loading) return;
+    if (step < STEPS.length - 1) {
+      if (step === 2 && !briefTouched) {
+        setData((prev) => ({ ...prev, composedBrief: composeBrief(prev) }));
+      }
+      goTo(step + 1);
+      return;
+    }
+    onSubmit(reviewBrief.trim());
+  };
+
+  const goBack = () => {
+    if (step === 0 || loading) return;
+    goTo(step - 1);
+  };
+
+  const applyExample = (example: (typeof EXAMPLES)[number]) => {
+    setBriefTouched(false);
+    setData({
+      ...example.data,
+      composedBrief: "",
+    });
+  };
+
+  const copy = STEP_COPY[step];
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center px-5 py-14">
@@ -64,20 +226,28 @@ export function BriefScreen({
       >
         <div className="space-y-5 text-center">
           <motion.p
+            key={`eyebrow-${step}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
             className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber/80"
           >
-            GTM factory
+            {copy.eyebrow}
           </motion.p>
-          <h1 className="font-display text-balance text-[2.75rem] leading-[1.08] tracking-tight text-foreground sm:text-5xl">
-            Scope your{" "}
-            <em className="not-italic text-amber-bright">go-to-market</em>
-          </h1>
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.h1
+              key={`title-${step}`}
+              custom={direction}
+              initial={{ opacity: 0, x: direction * 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: direction * -24 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              className="font-display text-balance text-[2.75rem] leading-[1.08] tracking-tight text-foreground sm:text-5xl"
+            >
+              {copy.title}
+            </motion.h1>
+          </AnimatePresence>
           <p className="mx-auto max-w-sm text-[15px] leading-relaxed text-muted">
-            Brief in. Agents scope ICP and signals, distribute the work, then
-            plan the reach-out cadence.
+            {copy.subtitle}
           </p>
         </div>
 
@@ -91,70 +261,223 @@ export function BriefScreen({
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (!brief.trim() || loading) return;
-            onSubmit(brief.trim());
+            goNext();
           }}
           className="space-y-3"
         >
-          <label className="sr-only" htmlFor="brief">
-            Product brief
-          </label>
-          <textarea
-            ref={textareaRef}
-            id="brief"
-            value={brief}
-            onChange={(e) => setBrief(e.target.value)}
-            onKeyDown={(e) => {
-              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-                e.preventDefault();
-                if (!brief.trim() || loading) return;
-                onSubmit(brief.trim());
-              }
-            }}
-            rows={3}
-            className="w-full resize-none rounded-2xl border border-white/[0.07] bg-surface/80 px-5 py-4 text-[15px] leading-relaxed text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition placeholder:text-muted/50 focus:border-amber/35 focus:bg-surface-elevated"
-            placeholder={PLACEHOLDER}
-            disabled={loading}
-          />
+          <div className="relative min-h-[9.5rem] overflow-hidden">
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={step}
+                custom={direction}
+                initial={{ opacity: 0, x: direction * 36 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: direction * -36 }}
+                transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                className="space-y-3"
+              >
+                {step === 0 && (
+                  <>
+                    <label className="sr-only" htmlFor="product">
+                      Product
+                    </label>
+                    <input
+                      ref={productRef}
+                      id="product"
+                      value={data.product}
+                      onChange={(e) => {
+                        setBriefTouched(false);
+                        setData((prev) => ({
+                          ...prev,
+                          product: e.target.value,
+                        }));
+                      }}
+                      placeholder="Sustainable water bottle"
+                      disabled={loading}
+                      className={inputClass}
+                      autoComplete="off"
+                    />
+                    <label className="sr-only" htmlFor="price">
+                      Price
+                    </label>
+                    <input
+                      id="price"
+                      value={data.price}
+                      onChange={(e) => {
+                        setBriefTouched(false);
+                        setData((prev) => ({
+                          ...prev,
+                          price: e.target.value,
+                        }));
+                      }}
+                      placeholder="$35"
+                      disabled={loading}
+                      className={inputClass}
+                      autoComplete="off"
+                    />
+                    <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                      {EXAMPLES.map((ex) => {
+                        const selected =
+                          data.product === ex.data.product &&
+                          data.price === ex.data.price &&
+                          data.audience === ex.data.audience;
+                        return (
+                          <button
+                            key={ex.label}
+                            type="button"
+                            disabled={loading}
+                            onClick={() => applyExample(ex)}
+                            className={
+                              selected
+                                ? "rounded-full border border-amber/40 bg-amber/10 px-3 py-1.5 text-[11px] font-medium text-amber-bright"
+                                : "rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-[11px] text-muted transition hover:border-white/15 hover:text-foreground"
+                            }
+                          >
+                            {ex.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
 
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {EXAMPLES.map((ex) => {
-              const selected = brief === ex.brief;
-              return (
-                <button
-                  key={ex.label}
-                  type="button"
-                  disabled={loading}
-                  onClick={() => setBrief(ex.brief)}
-                  className={
-                    selected
-                      ? "rounded-full border border-amber/40 bg-amber/10 px-3 py-1.5 text-[11px] font-medium text-amber-bright"
-                      : "rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-[11px] text-muted transition hover:border-white/15 hover:text-foreground"
-                  }
-                >
-                  {ex.label}
-                </button>
-              );
-            })}
+                {step === 1 && (
+                  <>
+                    <label className="sr-only" htmlFor="audience">
+                      Audience
+                    </label>
+                    <input
+                      ref={audienceRef}
+                      id="audience"
+                      value={data.audience}
+                      onChange={(e) => {
+                        setBriefTouched(false);
+                        setData((prev) => ({
+                          ...prev,
+                          audience: e.target.value,
+                        }));
+                      }}
+                      placeholder="eco-conscious millennials 25–35"
+                      disabled={loading}
+                      className={inputClass}
+                      autoComplete="off"
+                    />
+                  </>
+                )}
+
+                {step === 2 && (
+                  <>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      {GOALS.map((goal) => {
+                        const selected = data.goal === goal;
+                        return (
+                          <button
+                            key={goal}
+                            type="button"
+                            disabled={loading}
+                            onClick={() => {
+                              setBriefTouched(false);
+                              setData((prev) => ({ ...prev, goal }));
+                            }}
+                            className={cn(
+                              "rounded-full px-4 py-2 text-[13px] font-medium transition",
+                              selected
+                                ? "bg-amber text-[#1a1408]"
+                                : "border border-white/[0.08] bg-white/[0.03] text-muted hover:border-white/15 hover:text-foreground"
+                            )}
+                          >
+                            {goal}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <label className="sr-only" htmlFor="notes">
+                      Optional notes
+                    </label>
+                    <input
+                      ref={notesRef}
+                      id="notes"
+                      value={data.notes}
+                      onChange={(e) => {
+                        setBriefTouched(false);
+                        setData((prev) => ({
+                          ...prev,
+                          notes: e.target.value,
+                        }));
+                      }}
+                      placeholder="Optional notes (tone, offer, constraint…)"
+                      disabled={loading}
+                      className={inputClass}
+                      autoComplete="off"
+                    />
+                  </>
+                )}
+
+                {step === 3 && (
+                  <>
+                    <label className="sr-only" htmlFor="brief">
+                      Product brief
+                    </label>
+                    <textarea
+                      ref={briefRef}
+                      id="brief"
+                      value={reviewBrief}
+                      onChange={(e) => {
+                        setBriefTouched(true);
+                        setData((prev) => ({
+                          ...prev,
+                          composedBrief: e.target.value,
+                        }));
+                      }}
+                      onKeyDown={(e) => {
+                        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                          e.preventDefault();
+                          if (!reviewBrief.trim() || loading) return;
+                          onSubmit(reviewBrief.trim());
+                        }
+                      }}
+                      rows={4}
+                      className={cn(inputClass, "resize-none")}
+                      placeholder="Sustainable water bottle, $35, eco-conscious millennials 25–35"
+                      disabled={loading}
+                    />
+                  </>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading || !brief.trim()}
-            className="group relative flex w-full items-center justify-center overflow-hidden rounded-2xl bg-amber px-4 py-3.5 text-[15px] font-semibold text-[#1a1408] transition hover:bg-amber-bright disabled:cursor-not-allowed disabled:opacity-45"
-          >
-            <span className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-60" />
-            <span className="relative flex items-center gap-2">
-              {loading ? (
-                <>
-                  <span className="forge-ring inline-block h-3.5 w-3.5 rounded-full border-2 border-[#1a1408]/30 border-t-[#1a1408]" />
-                  Scoping…
-                </>
-              ) : (
-                "Scope it"
-              )}
-            </span>
-          </button>
+          <div className="flex items-center gap-2">
+            {step > 0 ? (
+              <button
+                type="button"
+                onClick={goBack}
+                disabled={loading}
+                className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-5 py-3.5 text-[15px] font-medium text-muted transition hover:border-white/15 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                Back
+              </button>
+            ) : null}
+            <button
+              type="submit"
+              disabled={loading || !canAdvance}
+              className="group relative flex min-w-0 flex-1 items-center justify-center overflow-hidden rounded-2xl bg-amber px-4 py-3.5 text-[15px] font-semibold text-[#1a1408] transition hover:bg-amber-bright disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <span className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-60" />
+              <span className="relative flex items-center gap-2">
+                {loading ? (
+                  <>
+                    <span className="forge-ring inline-block h-3.5 w-3.5 rounded-full border-2 border-[#1a1408]/30 border-t-[#1a1408]" />
+                    Scoping…
+                  </>
+                ) : step === STEPS.length - 1 ? (
+                  "Scope it"
+                ) : (
+                  "Next"
+                )}
+              </span>
+            </button>
+          </div>
 
           {errorMessage && !loading && (
             <p
@@ -166,11 +489,30 @@ export function BriefScreen({
           )}
         </form>
 
-        <p className="text-center text-[11px] leading-relaxed text-muted/55">
-          scope → distribute → reach out · gate ≥ 3% CTR
-          <span className="mx-1.5 hidden text-white/20 sm:inline">·</span>
-          <span className="hidden sm:inline">⌘↵ to scope</span>
-        </p>
+        <div className="flex items-center justify-center gap-2 text-[11px] text-muted/60 sm:gap-3">
+          {STEPS.map((label, i) => (
+            <div key={label} className="flex items-center gap-2 sm:gap-3">
+              {i > 0 && <span className="h-px w-3 bg-white/10 sm:w-4" />}
+              <button
+                type="button"
+                disabled={loading || i > step}
+                onClick={() => {
+                  if (i < step) goTo(i);
+                }}
+                className={cn(
+                  "transition",
+                  i === step
+                    ? "font-medium text-amber-bright"
+                    : i < step
+                      ? "text-foreground/70 hover:text-amber-bright"
+                      : "text-muted/45"
+                )}
+              >
+                {label}
+              </button>
+            </div>
+          ))}
+        </div>
       </motion.div>
     </div>
   );
