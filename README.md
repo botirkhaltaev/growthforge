@@ -26,14 +26,22 @@ cp .env.example .env.local
 npm run dev
 ```
 
+## Routes
+
+| Path | What |
+|------|------|
+| `/` | Marketing landing — thesis, loop, A/B/C showcase |
+| `/forge` | Interactive studio — brief → forge → deploy |
+
 ## Demo flow
 
-1. Pick an example chip (or edit the brief) → **Forge Campaign**
-2. Watch the factory loop: **Create → Test → Fail → Fix → Pass**
-3. Ambient agent activity on the creative (amber glow, shimmer, platform pulse)
-4. Swipe / ← → between variants A (1.2% FAIL) → B (2.8% CLOSE) → C (4.1% PASS)
-5. Hold or press **T** for trust overlay · **Approve & Deploy**
-6. **Forge another campaign** to loop again
+1. From `/` → **Forge a campaign** (or open `/forge`)
+2. Pick an example chip (or edit the brief) → **Forge Campaign**
+3. Watch the factory loop: **Create → Test → Fail → Fix → Pass**
+4. Ambient agent activity on the creative (amber glow, shimmer, platform pulse)
+5. Swipe / ← → between variants A (1.2% FAIL) → B (2.8% CLOSE) → C (4.1% PASS)
+6. Hold or press **T** for trust overlay · **Approve & Deploy**
+7. **Forge another campaign** to loop again
 
 ### Keyboard
 

@@ -112,7 +112,7 @@ export function AdCreative({
       {/* Visual plane */}
       <div
         className={cn(
-          "relative flex h-56 items-center justify-center overflow-hidden sm:h-64",
+          "relative flex h-48 items-center justify-center overflow-hidden sm:h-56",
           designerActive && "shimmer-active"
         )}
       >
