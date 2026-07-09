@@ -180,34 +180,34 @@ export async function* demoScopeStream(
     type: "system",
     message: `Scoping GTM motion · ${product.slice(0, 64)}…`,
   };
-  await sleep(350);
+  await sleep(220);
 
   yield {
     type: "agent_created",
     role: "foreman",
     message: "Foreman online · scope → distribute → reach out",
   };
-  await sleep(280);
+  await sleep(180);
 
   yield {
     type: "system",
     message: "Mapping ICP, buying signals, and channel mix…",
   };
-  await sleep(450);
+  await sleep(280);
 
   yield {
     type: "subagent_output",
     role: "analyst",
     content: "Scoring beachhead segment against win-rate history…",
   };
-  await sleep(500);
+  await sleep(300);
 
   yield {
     type: "subagent_output",
     role: "media_buyer",
     content: "Selecting 1–2 primary channels where ICP already spends time…",
   };
-  await sleep(450);
+  await sleep(280);
 
   const scope = scopeFromBrief(product);
   yield {
@@ -229,13 +229,13 @@ export async function* demoDistributeStream(
     type: "system",
     message: `Distributing work · ${product.slice(0, 48)}…`,
   };
-  await sleep(300);
+  await sleep(200);
 
   yield {
     type: "system",
     message: "Spawning 5 GTM stations on parallel runtimes…",
   };
-  await sleep(200);
+  await sleep(140);
 
   const agents = [
     { role: "copywriter" as const, model: "composer-2.5", task: "Copy & hooks" },
@@ -260,7 +260,7 @@ export async function* demoDistributeStream(
       model: a.model,
       message: `Spawning ${a.role} (${a.model})…`,
     };
-    await sleep(160);
+    await sleep(100);
   }
 
   for (const a of agents) {
@@ -271,7 +271,7 @@ export async function* demoDistributeStream(
       message: `${a.task} → ${a.role.replace("_", " ")}`,
     };
     yield { type: "agent_active", role: a.role };
-    await sleep(320);
+    await sleep(180);
     yield { type: "agent_idle", role: a.role };
   }
 
@@ -280,7 +280,7 @@ export async function* demoDistributeStream(
   }
   // Producer stays ambient until a pass variant kicks real FAL render
   yield { type: "agent_idle", role: "producer" };
-  await sleep(450);
+  await sleep(280);
 
   yield {
     type: "subagent_output",
@@ -288,7 +288,7 @@ export async function* demoDistributeStream(
     content:
       "Drafting 3 headline angles: eco-generic · impact-metric · lifestyle…",
   };
-  await sleep(550);
+  await sleep(320);
 
   yield {
     type: "subagent_output",
@@ -296,7 +296,7 @@ export async function* demoDistributeStream(
     content:
       "Composing visual concepts: studio product · ocean texture · lifestyle commute…",
   };
-  await sleep(450);
+  await sleep(280);
 
   yield {
     type: "subagent_output",
@@ -304,14 +304,14 @@ export async function* demoDistributeStream(
     content:
       "Enriching matched accounts · IG + FB · interest: sustainability",
   };
-  await sleep(400);
+  await sleep(240);
 
   yield {
     type: "subagent_output",
     role: "analyst",
     content: `Gate set: ≥${BENCHMARK_CTR}% CTR · kill underperforming segments`,
   };
-  await sleep(450);
+  await sleep(280);
 
   for (const a of agents) {
     yield { type: "agent_idle", role: a.role };
@@ -323,13 +323,13 @@ export async function* demoDistributeStream(
     role: "tester",
     message: "Gate · scoring Variant A…",
   };
-  await sleep(650);
+  await sleep(400);
   yield {
     type: "variant_ready",
     variant: DEMO_VARIANTS[0],
     message: `Fail · Variant A ${DEMO_VARIANTS[0].ctr}% CTR (need ≥${BENCHMARK_CTR}%)`,
   };
-  await sleep(350);
+  await sleep(220);
 
   yield {
     type: "iteration",
@@ -338,7 +338,7 @@ export async function* demoDistributeStream(
     role: "copywriter",
   };
   yield { type: "agent_active", role: "copywriter" };
-  await sleep(700);
+  await sleep(400);
   yield {
     type: "subagent_output",
     role: "copywriter",
@@ -352,13 +352,13 @@ export async function* demoDistributeStream(
     role: "tester",
     message: "Gate · re-scoring Variant B…",
   };
-  await sleep(650);
+  await sleep(400);
   yield {
     type: "variant_ready",
     variant: DEMO_VARIANTS[1],
     message: `Fail · Variant B ${DEMO_VARIANTS[1].ctr}% CTR — close but under bar`,
   };
-  await sleep(350);
+  await sleep(220);
 
   yield {
     type: "iteration",
@@ -367,7 +367,7 @@ export async function* demoDistributeStream(
     role: "designer",
   };
   yield { type: "agent_active", role: "designer" };
-  await sleep(700);
+  await sleep(400);
   yield {
     type: "subagent_output",
     role: "designer",
@@ -375,7 +375,7 @@ export async function* demoDistributeStream(
   };
   yield { type: "agent_idle", role: "designer" };
   yield { type: "agent_active", role: "copywriter" };
-  await sleep(450);
+  await sleep(280);
   yield {
     type: "subagent_output",
     role: "copywriter",
@@ -389,13 +389,13 @@ export async function* demoDistributeStream(
     role: "tester",
     message: "Gate · final scoring on Variant C…",
   };
-  await sleep(750);
+  await sleep(450);
   yield {
     type: "variant_ready",
     variant: DEMO_VARIANTS[2],
     message: `Pass · Variant C ${DEMO_VARIANTS[2].ctr}% CTR — clears ${BENCHMARK_CTR}% bar`,
   };
-  await sleep(280);
+  await sleep(180);
 
   const reachout = buildReachoutCadence(DEMO_VARIANTS[2]);
   yield {
@@ -403,7 +403,7 @@ export async function* demoDistributeStream(
     reachout,
     message: "Reach-out cadence drafted · Meta + email + LinkedIn",
   };
-  await sleep(250);
+  await sleep(160);
 
   yield {
     type: "complete",

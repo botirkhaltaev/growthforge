@@ -70,11 +70,15 @@ export default function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <p className="mb-4 text-center font-mono text-[10px] uppercase tracking-widest text-muted/50 sm:hidden">
+            Swipe stations · same as Distribute
+          </p>
+
+          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 scrollbar-none sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:pb-0 lg:grid-cols-5">
             {AGENTS.map((agent) => (
               <div
                 key={agent.role}
-                className="rounded-2xl border border-white/[0.07] bg-surface/60 px-5 py-6 text-center"
+                className="w-[68vw] max-w-[220px] shrink-0 snap-center rounded-2xl border border-white/[0.07] bg-surface/60 px-5 py-6 text-center sm:w-auto sm:max-w-none"
               >
                 <p className="font-display text-lg text-amber-bright">
                   {agent.role}
@@ -83,6 +87,11 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+
+          <p className="mt-6 text-center font-mono text-[11px] tracking-wide text-muted/50">
+            Five stations light up in Distribute — Copy · Design · Audience ·
+            Gate · Video
+          </p>
         </div>
       </section>
 
