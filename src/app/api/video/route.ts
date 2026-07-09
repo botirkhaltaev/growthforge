@@ -64,13 +64,24 @@ export async function POST(req: Request) {
     });
   } catch (err) {
     console.error("[growthforge] video submit failed", err);
-    return NextResponse.json(
-      {
-        error:
-          err instanceof Error ? err.message : "Failed to submit video job",
-      },
-      { status: 500 }
-    );
+    const status =
+      typeof err === "object" &&
+      err !== null &&
+      "status" in err &&
+      typeof (err as { status: unknown }).status === "number"
+        ? (err as { status: number }).status
+        : 500;
+    const detail =
+      typeof err === "object" &&
+      err !== null &&
+      "body" in err &&
+      typeof (err as { body: unknown }).body === "object" &&
+      (err as { body: { detail?: unknown } }).body?.detail
+        ? String((err as { body: { detail: unknown } }).body.detail)
+        : err instanceof Error
+          ? err.message
+          : "Failed to submit video job";
+    return NextResponse.json({ error: detail }, { status });
   }
 }
 
