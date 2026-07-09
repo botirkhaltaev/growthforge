@@ -8,6 +8,7 @@ interface TrustOverlayProps {
   variants: AdVariant[];
   confidence: number;
   agentCount?: number;
+  onClose?: () => void;
   onKill?: () => void;
 }
 
@@ -16,9 +17,10 @@ export function TrustOverlay({
   variants,
   confidence,
   agentCount = 4,
+  onClose,
   onKill,
 }: TrustOverlayProps) {
-  const iterations = Math.max(1, variants.length);
+  const iterations = Math.max(variants.length, 1);
   const winner = [...variants].reverse().find((v) => v.verdict === "pass");
 
   return (
@@ -28,69 +30,105 @@ export function TrustOverlay({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 z-40 flex items-end justify-center bg-black/70 p-5 backdrop-blur-sm sm:items-center"
+          className="absolute inset-0 z-40 flex items-end justify-center bg-black/75 p-5 backdrop-blur-sm sm:items-center"
+          onClick={onClose}
         >
           <motion.div
-            initial={{ y: 24, opacity: 0 }}
+            initial={{ y: 28, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 16, opacity: 0 }}
-            className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#14141a] p-5 shadow-2xl"
+            transition={{ type: "spring", stiffness: 320, damping: 28 }}
+            className="w-full max-w-sm rounded-2xl border border-white/[0.08] bg-surface-elevated p-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-amber-400/80">
-              Trust
-            </p>
-            <h2 className="mt-1 text-lg font-semibold text-stone-100">
-              Oversight at a glance
-            </h2>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-amber/80">
+                  Trust
+                </p>
+                <h2 className="mt-1 font-display text-xl text-foreground">
+                  Oversight
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-full px-2 py-1 text-muted hover:text-foreground"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
 
-            <dl className="mt-4 space-y-3 text-sm">
-              <div className="flex justify-between gap-4">
-                <dt className="text-stone-500">Agents</dt>
-                <dd className="font-medium text-stone-200">
-                  {agentCount} specialists · parallel
-                </dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-stone-500">Iterations</dt>
-                <dd className="font-medium text-stone-200">{iterations}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-stone-500">Confidence</dt>
-                <dd className="font-medium text-amber-300">{confidence}%</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-stone-500">Winner</dt>
-                <dd className="font-medium text-stone-200">
-                  Variant {winner?.label ?? "—"} · {winner?.ctr ?? "—"}% CTR
-                </dd>
-              </div>
+            <dl className="mt-5 space-y-3 text-sm">
+              <Row label="Agents" value={`${agentCount} specialists · parallel`} />
+              <Row label="Iterations" value={String(iterations)} />
+              <Row label="Confidence" value={`${confidence}%`} accent />
+              <Row
+                label="Winner"
+                value={
+                  winner
+                    ? `Variant ${winner.label} · ${winner.ctr}% CTR`
+                    : "Pending"
+                }
+              />
             </dl>
 
-            <ul className="mt-4 space-y-1.5 border-t border-white/5 pt-4 text-xs text-stone-500">
-              {variants.map((v) => (
-                <li key={v.id} className="flex justify-between gap-2">
-                  <span>
-                    {v.label} · {v.verdict.toUpperCase()}
-                  </span>
-                  <span className="text-stone-400">{v.ctr}% CTR</span>
-                </li>
-              ))}
-            </ul>
+            {variants.length > 0 && (
+              <ul className="mt-4 space-y-2 border-t border-white/[0.06] pt-4">
+                {variants.map((v) => (
+                  <li
+                    key={v.id}
+                    className="flex items-center justify-between gap-2 font-mono text-[11px]"
+                  >
+                    <span className="text-muted">
+                      {v.label} · {v.verdict.toUpperCase()}
+                    </span>
+                    <span
+                      className={
+                        v.verdict === "pass"
+                          ? "text-pass"
+                          : v.verdict === "close"
+                            ? "text-close"
+                            : "text-fail"
+                      }
+                    >
+                      {v.ctr}%
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
 
             <button
               type="button"
               onClick={onKill}
-              className="mt-5 w-full rounded-xl border border-red-500/40 bg-red-500/10 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/20"
+              className="mt-5 w-full rounded-xl border border-fail/35 bg-fail/10 py-2.5 text-sm font-semibold text-fail transition hover:bg-fail/20"
             >
               Kill switch — halt agents
             </button>
-
-            <p className="mt-3 text-center text-[11px] text-stone-600">
-              Release to dismiss
-            </p>
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+function Row({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="flex justify-between gap-4">
+      <dt className="text-muted">{label}</dt>
+      <dd className={accent ? "font-medium text-amber-bright" : "font-medium text-foreground/90"}>
+        {value}
+      </dd>
+    </div>
   );
 }

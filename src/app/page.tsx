@@ -163,7 +163,18 @@ export default function Home() {
 
   const onDeploy = () => {
     setPhase("deployed");
-    setStatusMessage("Live on Facebook + Instagram.");
+    setStatusMessage("Live on Meta · Facebook + Instagram");
+  };
+
+  const onReset = () => {
+    abortRef.current?.abort();
+    setPhase("brief");
+    setVariants([]);
+    setActiveIndex(0);
+    setActivity(IDLE_ACTIVITY);
+    setConfidence(0);
+    setStatusMessage("");
+    setLoading(false);
   };
 
   if (phase === "brief") {
@@ -177,11 +188,12 @@ export default function Home() {
       onIndexChange={setActiveIndex}
       activity={activity}
       statusMessage={statusMessage}
-      confidence={confidence || 94}
+      confidence={confidence || (phase === "ready" || phase === "deployed" ? 94 : 0)}
       forging={phase === "forging"}
       deployed={phase === "deployed"}
       onDeploy={onDeploy}
       onKill={onKill}
+      onReset={onReset}
     />
   );
 }
