@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AdCreative } from "./AdCreative";
 import { TrustOverlay } from "./TrustOverlay";
-import { FactoryLoop, inferLoopStep } from "./FactoryLoop";
+import { FactoryLoop, inferLoopStep, type LoopStep } from "./FactoryLoop";
 import type { AdVariant, AgentActivity } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { BENCHMARK_CTR } from "@/lib/demo-data";
@@ -22,6 +22,8 @@ interface ForgeCanvasProps {
   onApproveReachout: () => void;
   onKill: () => void;
   onReset?: () => void;
+  navigable?: LoopStep[];
+  onNavigate?: (step: LoopStep) => void;
 }
 
 const AGENT_LABELS: { key: keyof AgentActivity; label: string }[] = [
@@ -71,6 +73,8 @@ export function ForgeCanvas({
   onApproveReachout,
   onKill,
   onReset,
+  navigable,
+  onNavigate,
 }: ForgeCanvasProps) {
   const [trustOpen, setTrustOpen] = useState(false);
   const [isHolding, setIsHolding] = useState(false);
@@ -247,7 +251,7 @@ export function ForgeCanvas({
       <div className="px-5 pb-0.5 pt-1">
         <FactoryLoop
           compact
-          active={distributing ? loopStep ?? "distribute" : null}
+          active={distributing ? loopStep ?? "distribute" : "distribute"}
           completedThrough={
             hasPass ||
             variants.some(
@@ -256,6 +260,8 @@ export function ForgeCanvas({
               ? "distribute"
               : "scope"
           }
+          navigable={navigable}
+          onNavigate={onNavigate}
         />
       </div>
 
