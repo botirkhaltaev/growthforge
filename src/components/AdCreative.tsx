@@ -128,10 +128,13 @@ export function AdCreative({
           initial={{ scale: 0.92, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 240, damping: 24 }}
-          className="relative z-10 flex h-36 w-36 items-center justify-center rounded-[2rem] border border-white/15 bg-white/10 shadow-2xl backdrop-blur-xl sm:h-40 sm:w-40"
+          className="relative z-10 flex h-36 w-36 flex-col items-center justify-center rounded-[2rem] border border-white/15 bg-white/10 shadow-2xl backdrop-blur-xl sm:h-40 sm:w-40"
         >
-          <span className="font-display text-5xl text-white/90 sm:text-6xl">
+          <span className="font-display text-5xl leading-none text-white/90 sm:text-6xl">
             {variant.visualEmoji}
+          </span>
+          <span className="mt-2 font-mono text-[9px] uppercase tracking-[0.2em] text-white/35">
+            creative
           </span>
         </motion.div>
         <p className="absolute bottom-3 left-0 right-0 z-10 text-center font-mono text-[10px] tracking-wide text-white/45">

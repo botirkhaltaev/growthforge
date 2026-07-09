@@ -184,27 +184,23 @@ export function ForgeCanvas({
 
       {/* Ambient agent strip — only lit agents, never a dashboard */}
       <div className="flex h-7 items-center justify-center gap-1.5 px-5">
-        {anyActive ? (
-          AGENT_LABELS.filter(({ key }) => activity[key]).map(
-            ({ key, label }) => (
-              <span
-                key={key}
-                className="rounded-full bg-amber/15 px-2.5 py-1 font-mono text-[10px] tracking-wide text-amber-bright ring-1 ring-amber/30"
-              >
-                {label}
-                <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-bright" />
-              </span>
+        {anyActive
+          ? AGENT_LABELS.filter(({ key }) => activity[key]).map(
+              ({ key, label }) => (
+                <span
+                  key={key}
+                  className="rounded-full bg-amber/15 px-2.5 py-1 font-mono text-[10px] tracking-wide text-amber-bright ring-1 ring-amber/30"
+                >
+                  {label}
+                  <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-bright" />
+                </span>
+              )
             )
-          )
-        ) : (
-          <span className="font-mono text-[10px] text-muted/35">
-            {forging
-              ? "Agents on the creative…"
-              : deployed
-                ? "Loop complete"
-                : "Creative is the interface"}
-          </span>
-        )}
+          : forging && (
+              <span className="font-mono text-[10px] text-muted/40">
+                Agents on the creative…
+              </span>
+            )}
       </div>
 
       {/* Canvas */}
@@ -267,7 +263,7 @@ export function ForgeCanvas({
                 designerActive={activity.designer}
                 mediaBuyerActive={activity.media_buyer}
                 analystActive={activity.analyst}
-                showVerdict={!forging || variants.length > 0}
+                showVerdict={!forging}
               />
             </motion.div>
           ) : null}
@@ -424,8 +420,10 @@ export function ForgeCanvas({
           </button>
         )}
 
-        <p className="text-center text-[10px] text-muted/50">
-          Swipe or ← → to compare · Hold / T for trust · Esc for new brief
+        <p className="text-center text-[10px] text-muted/45">
+          {forging
+            ? "Hold for trust · Kill switch inside"
+            : "Swipe to compare · Hold for trust"}
         </p>
       </footer>
     </div>

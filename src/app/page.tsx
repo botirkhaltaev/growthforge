@@ -194,11 +194,17 @@ export default function Home() {
   };
 
   if (phase === "brief") {
+    const briefError =
+      statusMessage &&
+      !statusMessage.toLowerCase().includes("connecting") &&
+      !statusMessage.toLowerCase().includes("factory loop")
+        ? statusMessage
+        : undefined;
     return (
       <BriefScreen
         onSubmit={forge}
         loading={loading}
-        errorMessage={statusMessage}
+        errorMessage={briefError}
       />
     );
   }
