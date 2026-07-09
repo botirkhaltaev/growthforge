@@ -69,11 +69,17 @@ export function LandingShowcase() {
               viewport={{ once: true, margin: "-60px" }}
               custom={i}
               variants={fadeUp}
-              className="flex flex-col items-center gap-5"
+              className={cn(
+                "flex flex-col items-center gap-5",
+                variant.verdict === "pass" && "lg:-mt-2"
+              )}
             >
               <div className="flex w-full items-center justify-between px-1">
                 <span className="font-mono text-[11px] tracking-wider text-muted">
                   Variant {variant.label}
+                  {variant.verdict === "pass" && (
+                    <span className="ml-2 text-pass">· launch ready</span>
+                  )}
                 </span>
                 <span
                   className={cn(
@@ -87,7 +93,11 @@ export function LandingShowcase() {
               <AdCreative
                 variant={variant}
                 showVerdict
-                className="max-w-sm"
+                showIterationNote={false}
+                className={cn(
+                  "max-w-sm",
+                  variant.verdict === "pass" && "shadow-[0_0_40px_rgba(125,206,160,0.12)]"
+                )}
               />
               <p className="max-w-xs text-center text-[13px] leading-relaxed text-muted/80">
                 {variant.iterationNote}

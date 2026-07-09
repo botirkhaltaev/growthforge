@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { FactoryLoop } from "./FactoryLoop";
@@ -37,6 +38,15 @@ export function BriefScreen({
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center px-5 py-14">
+      <div className="absolute left-5 top-[max(1rem,env(safe-area-inset-top))]">
+        <Link
+          href="/"
+          className="font-mono text-[11px] tracking-wide text-muted/70 transition hover:text-amber-bright"
+        >
+          ← Growth Forge
+        </Link>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -50,7 +60,7 @@ export function BriefScreen({
             transition={{ delay: 0.1 }}
             className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber/80"
           >
-            Growth Forge · GTM factory
+            GTM factory
           </motion.p>
           <h1 className="font-display text-balance text-[2.75rem] leading-[1.08] tracking-tight text-foreground sm:text-5xl">
             What are you{" "}
@@ -136,7 +146,7 @@ export function BriefScreen({
         </form>
 
         <p className="text-center text-[11px] leading-relaxed text-muted/55">
-          create → test → iterate → launch
+          create → test → iterate → launch · gate ≥ 3% CTR
         </p>
       </motion.div>
     </div>

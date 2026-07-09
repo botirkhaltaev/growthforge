@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AdCreative } from "./AdCreative";
@@ -7,6 +8,7 @@ import { TrustOverlay } from "./TrustOverlay";
 import { FactoryLoop, inferLoopStep } from "./FactoryLoop";
 import type { AdVariant, AgentActivity } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { BENCHMARK_CTR } from "@/lib/demo-data";
 
 interface ForgeCanvasProps {
   variants: AdVariant[];
@@ -155,13 +157,22 @@ export function ForgeCanvas({
         >
           GTM Factory
         </button>
-        <button
-          type="button"
-          onClick={() => setTrustOpen(true)}
-          className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 font-mono text-[10px] tracking-wide text-muted transition hover:border-amber/30 hover:text-amber-bright"
-        >
-          Gate{confidence > 0 ? ` · ${confidence}%` : ""}
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/"
+            className="rounded-full px-2 py-1 font-mono text-[10px] tracking-wide text-muted/55 transition hover:text-amber-bright"
+            title="Back to landing"
+          >
+            Home
+          </Link>
+          <button
+            type="button"
+            onClick={() => setTrustOpen(true)}
+            className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 font-mono text-[10px] tracking-wide text-muted transition hover:border-amber/30 hover:text-amber-bright"
+          >
+            Gate{confidence > 0 ? ` · ${confidence}%` : ""}
+          </button>
+        </div>
       </header>
 
       {/* GTM factory stations */}
@@ -364,6 +375,14 @@ export function ForgeCanvas({
               <span className="font-mono text-sm tabular-nums text-muted">
                 {formatRevenue(variant.revenueForecast)}
               </span>
+              {!forging && (
+                <>
+                  <span className="text-white/15">·</span>
+                  <span className="font-mono text-[11px] tabular-nums text-muted/55">
+                    gate ≥{BENCHMARK_CTR}%
+                  </span>
+                </>
+              )}
             </>
           )}
         </div>
