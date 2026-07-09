@@ -153,17 +153,29 @@ export function ForgeCanvas({
 
   const anyActive = Object.values(activity).some(Boolean);
 
+  const videoBusy =
+    activity.producer ||
+    passVariant?.videoStatus === "producing" ||
+    (hasPass &&
+      !passVariant?.videoUrl &&
+      passVariant?.videoStatus !== "failed" &&
+      passVariant?.videoStatus !== "ready");
+
+  // Pass unlocks the workflow even while video still renders in background
+  const workflowUnlocked = hasPass || !forging;
+
   const ctaLabel = (() => {
     if (deployed) return "Live on Meta · Facebook + Instagram";
-    if (forging) return "Factory iterating…";
+    if (!workflowUnlocked) return "Factory iterating…";
     if (variant?.verdict === "pass") return "Approve & Launch";
     if (hasPass) return `Jump to winner · Variant ${passVariant?.label}`;
     return "Waiting for a launch-ready variant…";
   })();
 
   const canJumpToWinner =
-    !forging && !deployed && hasPass && variant?.verdict !== "pass";
-  const canDeploy = !forging && !deployed && variant?.verdict === "pass";
+    workflowUnlocked && !deployed && hasPass && variant?.verdict !== "pass";
+  const canDeploy =
+    workflowUnlocked && !deployed && variant?.verdict === "pass";
   const ctaDisabled = !canDeploy && !canJumpToWinner;
 
   const onCta = () => {
@@ -345,7 +357,7 @@ export function ForgeCanvas({
                 mediaBuyerActive={activity.media_buyer}
                 analystActive={activity.analyst}
                 producerActive={activity.producer}
-                showVerdict={!forging}
+                showVerdict={workflowUnlocked}
               />
             </motion.div>
           ) : null}
@@ -482,9 +494,11 @@ export function ForgeCanvas({
         )}
 
         <p className="text-center text-[10px] text-muted/45">
-          {forging
+          {!workflowUnlocked
             ? "Hold for gate · Kill switch inside"
-            : "Swipe to compare · Hold for launch gate"}
+            : videoBusy
+              ? "Video rendering in background · swipe & launch anytime"
+              : "Swipe to compare · Hold for launch gate"}
         </p>
       </footer>
     </div>
