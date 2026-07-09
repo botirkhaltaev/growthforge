@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { FactoryLoop } from "./FactoryLoop";
@@ -37,6 +38,15 @@ export function BriefScreen({
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center px-5 py-14">
+      <div className="absolute left-5 top-[max(1rem,env(safe-area-inset-top))]">
+        <Link
+          href="/"
+          className="font-mono text-[11px] tracking-wide text-muted/70 transition hover:text-amber-bright"
+        >
+          ← Growth Forge
+        </Link>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -50,19 +60,24 @@ export function BriefScreen({
             transition={{ delay: 0.1 }}
             className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber/80"
           >
-            Growth Forge · GTM factory
+            GTM factory
           </motion.p>
           <h1 className="font-display text-balance text-[2.75rem] leading-[1.08] tracking-tight text-foreground sm:text-5xl">
-            What are you{" "}
-            <em className="not-italic text-amber-bright">launching?</em>
+            Scope your{" "}
+            <em className="not-italic text-amber-bright">go-to-market</em>
           </h1>
           <p className="mx-auto max-w-sm text-[15px] leading-relaxed text-muted">
-            Brief in. Agents create, test, and iterate GTM creative until it
-            clears the gate — then you launch.
+            Brief in. Agents scope ICP and signals, distribute the work, then
+            plan the reach-out cadence.
           </p>
         </div>
 
-        <FactoryLoop completedThrough={null} className="opacity-70" />
+        <FactoryLoop
+          completedThrough={null}
+          active={loading ? "scope" : null}
+          showCaption
+          className="opacity-70"
+        />
 
         <form
           onSubmit={(e) => {
@@ -79,6 +94,13 @@ export function BriefScreen({
             id="brief"
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                e.preventDefault();
+                if (!brief.trim() || loading) return;
+                onSubmit(brief.trim());
+              }
+            }}
             rows={3}
             className="w-full resize-none rounded-2xl border border-white/[0.07] bg-surface/80 px-5 py-4 text-[15px] leading-relaxed text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition placeholder:text-muted/50 focus:border-amber/35 focus:bg-surface-elevated"
             placeholder={PLACEHOLDER}
@@ -117,10 +139,10 @@ export function BriefScreen({
               {loading ? (
                 <>
                   <span className="forge-ring inline-block h-3.5 w-3.5 rounded-full border-2 border-[#1a1408]/30 border-t-[#1a1408]" />
-                  Running factory…
+                  Scoping…
                 </>
               ) : (
-                "Run GTM Factory"
+                "Scope it"
               )}
             </span>
           </button>
@@ -136,7 +158,9 @@ export function BriefScreen({
         </form>
 
         <p className="text-center text-[11px] leading-relaxed text-muted/55">
-          create → test → iterate → launch
+          scope → distribute → reach out · gate ≥ 3% CTR
+          <span className="mx-1.5 hidden text-white/20 sm:inline">·</span>
+          <span className="hidden sm:inline">⌘↵ to scope</span>
         </p>
       </motion.div>
     </div>

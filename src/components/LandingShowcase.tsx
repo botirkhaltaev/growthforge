@@ -28,7 +28,7 @@ const fadeUp = {
 
 export function LandingShowcase() {
   return (
-    <section id="showcase" className="relative px-5 py-24 sm:py-32">
+    <section id="showcase" className="relative px-5 py-24 pb-28 sm:py-32 sm:pb-32">
       <div className="mx-auto max-w-6xl">
         <motion.div
           initial="hidden"
@@ -55,12 +55,16 @@ export function LandingShowcase() {
             custom={2}
             className="mx-auto max-w-md text-[15px] leading-relaxed text-muted"
           >
-            Agents iterate until CTR clears the 3% launch gate — from generic
-            eco copy to a lifestyle hook that converts.
+            Work is distributed until CTR clears the 3% gate — from generic eco
+            copy to a lifestyle hook that converts.
           </motion.p>
         </motion.div>
 
-        <div className="grid gap-10 lg:grid-cols-3 lg:gap-6">
+        <p className="mb-4 text-center font-mono text-[10px] uppercase tracking-widest text-muted/50 sm:hidden">
+          Swipe to compare · winner highlighted
+        </p>
+
+        <div className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-3 scrollbar-none sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:pb-0 lg:gap-6">
           {DEMO_VARIANTS.map((variant, i) => (
             <motion.div
               key={variant.id}
@@ -69,11 +73,18 @@ export function LandingShowcase() {
               viewport={{ once: true, margin: "-60px" }}
               custom={i}
               variants={fadeUp}
-              className="flex flex-col items-center gap-5"
+              className={cn(
+                "flex w-[78vw] max-w-[300px] shrink-0 snap-center flex-col items-center gap-5 sm:w-auto sm:max-w-none",
+                variant.verdict === "pass" &&
+                  "rounded-3xl ring-2 ring-pass/40 ring-offset-4 ring-offset-[#0c0c10] lg:-mt-2"
+              )}
             >
               <div className="flex w-full items-center justify-between px-1">
                 <span className="font-mono text-[11px] tracking-wider text-muted">
                   Variant {variant.label}
+                  {variant.verdict === "pass" && (
+                    <span className="ml-2 text-pass">· launch ready</span>
+                  )}
                 </span>
                 <span
                   className={cn(
@@ -87,7 +98,12 @@ export function LandingShowcase() {
               <AdCreative
                 variant={variant}
                 showVerdict
-                className="max-w-sm"
+                showIterationNote={false}
+                className={cn(
+                  "max-w-sm",
+                  variant.verdict === "pass" &&
+                    "shadow-[0_0_40px_rgba(125,206,160,0.12)]"
+                )}
               />
               <p className="max-w-xs text-center text-[13px] leading-relaxed text-muted/80">
                 {variant.iterationNote}

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "GTM Factory — Growth Forge",
   description:
-    "Enter a product brief and watch four Cursor agents create, test, and iterate GTM creative until it clears the launch gate.",
+    "Scope ICP and signals, distribute work across agents, then approve a multi-touch reach-out cadence.",
 };
 
 export default function ForgeLayout({
