@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import type { AdVariant } from "@/lib/types";
+import type { AdVariant, VideoStatus } from "@/lib/types";
 import { FactoryLoop } from "./FactoryLoop";
 
 interface TrustOverlayProps {
@@ -10,8 +10,23 @@ interface TrustOverlayProps {
   confidence: number;
   agentCount?: number;
   distributing?: boolean;
+  videoStatus?: VideoStatus;
+  hasVideoUrl?: boolean;
+  producerActive?: boolean;
   onClose?: () => void;
   onKill?: () => void;
+}
+
+function videoRowLabel(
+  status?: VideoStatus,
+  hasVideoUrl?: boolean,
+  producerActive?: boolean
+): string {
+  if (hasVideoUrl || status === "ready") return "Ready · Producer";
+  if (status === "failed") return "Unavailable · static creative";
+  if (status === "producing" || producerActive) return "Generating… · Producer";
+  if (status === "idle") return "Queued after gate pass";
+  return "Waiting for gate pass";
 }
 
 export function TrustOverlay({
@@ -20,12 +35,19 @@ export function TrustOverlay({
   confidence,
   agentCount = 5,
   distributing = false,
+  videoStatus,
+  hasVideoUrl = false,
+  producerActive = false,
   onClose,
   onKill,
 }: TrustOverlayProps) {
   const iterations = Math.max(variants.length, 1);
   const winner = [...variants].reverse().find((v) => v.verdict === "pass");
   const hasPass = Boolean(winner);
+  const videoBusy =
+    videoStatus === "producing" ||
+    producerActive ||
+    (hasPass && !hasVideoUrl && videoStatus !== "failed" && videoStatus !== "ready");
 
   return (
     <AnimatePresence>
@@ -96,6 +118,11 @@ export function TrustOverlay({
                     ? `Variant ${winner.label} · ${winner.ctr}% CTR`
                     : "Pending"
                 }
+              />
+              <Row
+                label="Video ad"
+                value={videoRowLabel(videoStatus, hasVideoUrl, producerActive)}
+                accent={videoBusy || hasVideoUrl || videoStatus === "ready"}
               />
             </dl>
 

@@ -56,7 +56,7 @@ npm run dev
 |-----|--------|
 | ← / → | Compare variants |
 | T | Distribution gate / oversight |
-| Esc | Close gate · or new brief |
+| Esc | Close distribution gate |
 
 ## Env
 

@@ -141,7 +141,7 @@ export function ForgeCanvas({
 
   useEffect(() => {
     canvasRef.current?.focus({ preventScroll: true });
-  }, []);
+  }, [variants.length, ready, distributing]);
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -261,7 +261,7 @@ export function ForgeCanvas({
 
       {/* Agent strip — all pills visible; Video signals generating → ready */}
       <div className="flex flex-col items-center gap-1 px-5 py-0.5">
-        <div className="flex flex-wrap items-center justify-center gap-1.5">
+        <div className="flex w-full max-w-md snap-x snap-mandatory items-center gap-1.5 overflow-x-auto scrollbar-none sm:max-w-none sm:flex-wrap sm:justify-center sm:overflow-visible">
           {AGENT_LABELS.map(({ key, label }) => {
             const state = agentPillState(key, activity, {
               distributing,
@@ -275,7 +275,7 @@ export function ForgeCanvas({
               <span
                 key={key}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] tracking-wide transition",
+                  "inline-flex shrink-0 snap-center items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] tracking-wide transition",
                   state === "idle" && "text-muted/40",
                   state === "working" &&
                     "bg-amber/15 text-amber-bright ring-1 ring-amber/30",
@@ -410,11 +410,32 @@ export function ForgeCanvas({
           {statusMessage || (anyActive ? "Agents working…" : "")}
         </p>
 
+        {canJumpToWinner && passVariant && (
+          <button
+            type="button"
+            onClick={jumpToPass}
+            className="mx-auto mt-2 flex w-full max-w-sm items-center justify-between gap-3 rounded-xl border border-pass/30 bg-pass/10 px-3 py-2 text-left transition hover:bg-pass/15"
+          >
+            <span className="text-[11px] text-pass/90">
+              Viewing {variant?.label} · jump to winner{" "}
+              <span className="font-semibold text-pass">
+                {passVariant.label}
+              </span>
+            </span>
+            <span className="font-mono text-[10px] text-pass/75">
+              {passVariant.ctr.toFixed(1)}% CTR
+            </span>
+          </button>
+        )}
+
         <TrustOverlay
           open={trustOpen}
           variants={variants}
           confidence={confidence}
           distributing={distributing}
+          videoStatus={passVariant?.videoStatus}
+          hasVideoUrl={Boolean(passVariant?.videoUrl)}
+          producerActive={activity.producer}
           onClose={() => setTrustOpen(false)}
           onKill={() => {
             setTrustOpen(false);
@@ -427,39 +448,48 @@ export function ForgeCanvas({
         <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-3">
           <div className="flex items-center gap-1.5">
             {variants.length > 0 ? (
-              variants.map((v, i) => (
-                <button
-                  key={v.id}
-                  type="button"
-                  aria-label={`Variant ${v.label} · ${v.verdict}`}
-                  onClick={() => onIndexChange(i)}
-                  className={cn(
-                    "relative flex h-7 min-w-7 items-center justify-center rounded-full px-2 font-mono text-[11px] font-medium transition",
-                    i === activeIndex
-                      ? "bg-amber text-[#1a1408]"
-                      : "bg-white/[0.06] text-muted hover:bg-white/10",
-                    i === activeIndex &&
-                      v.verdict === "pass" &&
-                      "ring-2 ring-pass/55",
-                    i === activeIndex &&
-                      v.verdict === "close" &&
-                      "ring-2 ring-close/55",
-                    i === activeIndex &&
-                      v.verdict === "fail" &&
-                      "ring-2 ring-fail/55"
-                  )}
-                >
-                  {v.label}
-                  <span
+              variants.map((v, i) => {
+                const isActive = i === activeIndex;
+                const isWinnerIdle = v.verdict === "pass" && !isActive;
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    aria-label={`Variant ${v.label} · ${v.verdict}${
+                      isWinnerIdle ? " · winner" : ""
+                    }`}
+                    onClick={() => onIndexChange(i)}
                     className={cn(
-                      "absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full",
-                      v.verdict === "pass" && "bg-pass",
-                      v.verdict === "close" && "bg-close",
-                      v.verdict === "fail" && "bg-fail"
+                      "relative flex h-7 min-w-7 items-center justify-center rounded-full px-2 font-mono text-[11px] font-medium transition",
+                      isActive
+                        ? "bg-amber text-[#1a1408]"
+                        : isWinnerIdle
+                          ? "bg-pass/15 text-pass hover:bg-pass/25"
+                          : "bg-white/[0.06] text-muted hover:bg-white/10",
+                      isActive &&
+                        v.verdict === "pass" &&
+                        "ring-2 ring-pass/55",
+                      isActive &&
+                        v.verdict === "close" &&
+                        "ring-2 ring-close/55",
+                      isActive &&
+                        v.verdict === "fail" &&
+                        "ring-2 ring-fail/55",
+                      isWinnerIdle && "ring-2 ring-pass/45"
                     )}
-                  />
-                </button>
-              ))
+                  >
+                    {v.label}
+                    <span
+                      className={cn(
+                        "absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full",
+                        v.verdict === "pass" && "bg-pass",
+                        v.verdict === "close" && "bg-close",
+                        v.verdict === "fail" && "bg-fail"
+                      )}
+                    />
+                  </button>
+                );
+              })
             ) : (
               <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-white/[0.06] px-2 font-mono text-[11px] text-muted/50">
                 —
