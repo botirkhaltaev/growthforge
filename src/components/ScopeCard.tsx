@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { GtmScope } from "@/lib/types";
-import { FactoryLoop } from "./FactoryLoop";
+import { FactoryLoop, type LoopStep } from "./FactoryLoop";
 
 interface ScopeCardProps {
   scope: GtmScope;
@@ -11,6 +11,8 @@ interface ScopeCardProps {
   loading?: boolean;
   onConfirm: () => void;
   onReset?: () => void;
+  navigable?: LoopStep[];
+  onNavigate?: (step: LoopStep) => void;
 }
 
 export function ScopeCard({
@@ -19,6 +21,8 @@ export function ScopeCard({
   loading,
   onConfirm,
   onReset,
+  navigable,
+  onNavigate,
 }: ScopeCardProps) {
   return (
     <div className="relative flex min-h-dvh flex-col px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]">
@@ -52,9 +56,11 @@ export function ScopeCard({
       <div className="px-1 pb-3">
         <FactoryLoop
           compact
-          active={null}
+          active="scope"
           completedThrough="scope"
           showCaption={false}
+          navigable={navigable}
+          onNavigate={onNavigate}
         />
       </div>
 

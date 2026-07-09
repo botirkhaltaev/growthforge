@@ -17,6 +17,9 @@ interface FactoryLoopProps {
   compact?: boolean;
   showCaption?: boolean;
   className?: string;
+  /** Stations the user can jump to (visited / data already exists). */
+  navigable?: LoopStep[];
+  onNavigate?: (step: LoopStep) => void;
 }
 
 const ORDER: LoopStep[] = ["scope", "distribute", "reachout"];
@@ -32,9 +35,12 @@ export function FactoryLoop({
   compact = false,
   showCaption = false,
   className,
+  navigable = [],
+  onNavigate,
 }: FactoryLoopProps) {
   const doneRank = rank(completedThrough);
   const activeRank = rank(active);
+  const navigableSet = new Set(navigable);
 
   return (
     <div className={cn("space-y-2", className)}>
@@ -52,6 +58,20 @@ export function FactoryLoop({
             completedThrough === "reachout" && step.id === "reachout";
           const isDone = stepRank <= doneRank && !isActive && !isFinal;
           const isUpcoming = stepRank > Math.max(doneRank, activeRank);
+          const canNavigate =
+            Boolean(onNavigate) && navigableSet.has(step.id) && !isActive;
+
+          const pillClass = cn(
+            "rounded-full font-mono tracking-wide transition",
+            compact ? "px-2 py-0.5 text-[9px]" : "px-2.5 py-1 text-[10px]",
+            isActive &&
+              "bg-amber/20 text-amber-bright ring-1 ring-amber/40 loop-pulse",
+            isFinal && "bg-pass/20 font-medium text-pass ring-1 ring-pass/45",
+            isDone && "bg-white/[0.07] text-foreground/55",
+            isUpcoming && "text-muted/35",
+            canNavigate &&
+              "cursor-pointer hover:bg-amber/15 hover:text-amber-bright hover:ring-1 hover:ring-amber/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber/40"
+          );
 
           return (
             <div key={step.id} className="flex items-center gap-1.5">
@@ -63,22 +83,23 @@ export function FactoryLoop({
                   )}
                 />
               )}
-              <span
-                className={cn(
-                  "rounded-full font-mono tracking-wide transition",
-                  compact
-                    ? "px-2 py-0.5 text-[9px]"
-                    : "px-2.5 py-1 text-[10px]",
-                  isActive &&
-                    "bg-amber/20 text-amber-bright ring-1 ring-amber/40 loop-pulse",
-                  isFinal &&
-                    "bg-pass/20 font-medium text-pass ring-1 ring-pass/45",
-                  isDone && "bg-white/[0.07] text-foreground/55",
-                  isUpcoming && "text-muted/35"
-                )}
-              >
-                {step.label}
-              </span>
+              {canNavigate ? (
+                <button
+                  type="button"
+                  className={pillClass}
+                  onClick={() => onNavigate?.(step.id)}
+                  aria-label={`Go to ${step.label}`}
+                >
+                  {step.label}
+                </button>
+              ) : (
+                <span
+                  className={pillClass}
+                  aria-current={isActive ? "step" : undefined}
+                >
+                  {step.label}
+                </span>
+              )}
             </div>
           );
         })}
