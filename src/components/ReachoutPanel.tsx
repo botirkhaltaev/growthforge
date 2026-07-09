@@ -80,10 +80,15 @@ export function ReachoutPanel({
           </p>
           <h1 className="font-display text-balance text-[1.75rem] leading-[1.12] tracking-tight sm:text-3xl">
             {launched ? (
-              <>
+              <motion.span
+                initial={{ opacity: 0.6, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 22 }}
+                className="inline-block"
+              >
                 Live.{" "}
                 <em className="not-italic text-pass">Replies feed back.</em>
-              </>
+              </motion.span>
             ) : (
               <>
                 Cadence ready.{" "}
@@ -166,8 +171,7 @@ export function ReachoutPanel({
               <div className="min-w-0 flex-1 rounded-2xl border border-white/[0.07] bg-surface/60 px-3.5 py-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-mono text-[10px] uppercase tracking-wider text-muted/55">
-                    {CHANNEL_LABEL[touch.channel]}
-                    {touch.channel !== "meta_ads" ? ` · Day ${touch.day}` : ""}
+                    {CHANNEL_LABEL[touch.channel]} · Day {touch.day}
                   </p>
                   <span
                     className={cn(
@@ -203,13 +207,16 @@ export function ReachoutPanel({
       <div className="mx-auto w-full max-w-lg shrink-0 space-y-2 pt-3">
         {launched ? (
           <>
-            <button
+            <motion.button
               type="button"
               disabled
-              className="w-full rounded-2xl bg-pass/15 py-3.5 text-[15px] font-semibold text-pass"
+              initial={{ scale: 0.96, opacity: 0.7 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 280, damping: 20 }}
+              className="w-full rounded-2xl bg-pass/15 py-3.5 text-[15px] font-semibold text-pass ring-1 ring-pass/35"
             >
               Live · feedback loop open
-            </button>
+            </motion.button>
             <button
               type="button"
               onClick={onReset}

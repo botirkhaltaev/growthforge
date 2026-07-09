@@ -233,7 +233,7 @@ export async function* demoDistributeStream(
 
   yield {
     type: "system",
-    message: "Spawning 4 GTM stations on parallel runtimes…",
+    message: "Spawning 5 GTM stations on parallel runtimes…",
   };
   await sleep(200);
 
@@ -246,6 +246,11 @@ export async function* demoDistributeStream(
       task: "Audience & enrichment",
     },
     { role: "analyst" as const, model: "composer-2.5", task: "Gate & forecast" },
+    {
+      role: "producer" as const,
+      model: "fal · gemini-omni-flash",
+      task: "Video ad render",
+    },
   ];
 
   for (const a of agents) {
@@ -273,6 +278,8 @@ export async function* demoDistributeStream(
   for (const a of agents) {
     yield { type: "agent_active", role: a.role };
   }
+  // Producer stays ambient until a pass variant kicks real FAL render
+  yield { type: "agent_idle", role: "producer" };
   await sleep(450);
 
   yield {
